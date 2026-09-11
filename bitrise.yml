@@ -1,0 +1,92 @@
+format_version: '13'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: flutter
+
+app:
+  envs:
+    - FLUTTER_VERSION: '3.44.1'
+    - PROJECT_LOCATION: '.'
+
+# Set up independent Bitrise apps (or manually start each workflow) for parallel
+# Android/iOS builds. Select a macOS Xcode stack for either iOS workflow.
+workflows:
+  _prepare:
+    steps:
+      - activate-ssh-key@4:
+          run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+      - git-clone@8: {}
+      - script@1:
+          title: Install pinned Flutter SDK
+          inputs:
+            - content: |-
+                #!/usr/bin/env bash
+                set -euo pipefail
+                SDK_DIR="${BITRISE_SOURCE_DIR}/.ci-flutter"
+                git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git "$SDK_DIR"
+                export PATH="$SDK_DIR/bin:$PATH"
+                envman add --key PATH --value "$PATH"
+                flutter --version
+                flutter config --no-analytics
+                flutter precache --android
+                if [[ "$(uname -s)" == "Darwin" ]]; then
+                  flutter precache --ios
+                fi
+      - script@1:
+          title: Dependencies, database generation, analysis and tests
+          inputs:
+            - content: |-
+                #!/usr/bin/env bash
+                set -euo pipefail
+                cd "$BITRISE_SOURCE_DIR/$PROJECT_LOCATION"
+                flutter pub get
+                dart run build_runner build --delete-conflicting-outputs
+                flutter analyze
+                flutter test
+
+  android-demo:
+    description: Release APK signed with the demo debug key, ready for installation.
+    before_run: [_prepare]
+    steps:
+      - script@1:
+          title: Build and collect Android APK
+          inputs:
+            - content: |-
+                #!/usr/bin/env bash
+                set -euo pipefail
+                cd "$BITRISE_SOURCE_DIR/$PROJECT_LOCATION"
+                flutter build apk --release
+                mkdir -p "$BITRISE_DEPLOY_DIR"
+                cp build/app/outputs/flutter-apk/app-release.apk "$BITRISE_DEPLOY_DIR/DreamSpace.apk"
+      - deploy-to-bitrise-io@2: {}
+
+  ios-compile:
+    description: Compile iOS on a macOS Xcode stack without Apple signing credentials.
+    before_run: [_prepare]
+    steps:
+      - script@1:
+          title: Build unsigned iOS app
+          inputs:
+            - content: |-
+                #!/usr/bin/env bash
+                set -euo pipefail
+                cd "$BITRISE_SOURCE_DIR/$PROJECT_LOCATION"
+                flutter build ios --release --no-codesign
+                mkdir -p "$BITRISE_DEPLOY_DIR"
+                ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app "$BITRISE_DEPLOY_DIR/DreamSpace-unsigned.app.zip"
+      - deploy-to-bitrise-io@2: {}
+
+  ios-simulator:
+    description: Runnable simulator app on a macOS Xcode stack, no signing required.
+    before_run: [_prepare]
+    steps:
+      - script@1:
+          title: Build iOS simulator app
+          inputs:
+            - content: |-
+                #!/usr/bin/env bash
+                set -euo pipefail
+                cd "$BITRISE_SOURCE_DIR/$PROJECT_LOCATION"
+                flutter build ios --simulator --debug
+                mkdir -p "$BITRISE_DEPLOY_DIR"
+                ditto -c -k --sequesterRsrc --keepParent build/ios/iphonesimulator/Runner.app "$BITRISE_DEPLOY_DIR/DreamSpace-simulator.app.zip"
+      - deploy-to-bitrise-io@2: {}

@@ -1,0 +1,16 @@
+{
+  "model": "openai/gpt-image-2.5-sunburst/text-to-image",
+  "task_id": "3d8652bbcec149eca231ac15a0068712",
+  "request": {
+    "prompt": "A small collection of floating islands above an ocean of soft lavender clouds under a deep indigo starry sky. The main island on the center-right holds a single graceful ancient tree, tiny waterfalls disappear into the mist, a pale-gold crescent moon in the distance. Wonder, lightness and quiet joy, refined cinematic storybook realism, mostly cool colors with sparse warm accents. Dark calm left third. A clear graceful silhouette for a circular crop.\nPremium cinematic dreamscape illustration for DreamSpace, sophisticated storybook realism, deep midnight blue and indigo palette, restrained lavender rim lighting, subtle warm moonlit gold, soft volumetric clouds, elegant atmospheric depth, detailed focal subject with calm low-detail negative space, consistent art direction, polished fantasy editorial artwork. No typography, no letters, no logos, no watermark, no UI, no borders, no phone mockup, no excessive bloom, no neon cyberpunk, no cartoon emoji style. Horizontal 4:3 composition.",
+    "resolution": "2k",
+    "quality": "medium",
+    "output_format": "png",
+    "aspect_ratio": "4:3"
+  },
+  "status": "completed",
+  "file": "assets\\dreams\\sky_islands.png",
+  "width": 2224,
+  "height": 1664,
+  "bytes": 5537552
+}

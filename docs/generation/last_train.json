@@ -1,0 +1,16 @@
+{
+  "model": "openai/gpt-image-2.5-sunburst/text-to-image",
+  "task_id": "6f2916a0479046e9856c8058b3e193c3",
+  "request": {
+    "prompt": "A vintage midnight-blue passenger train waiting at an almost empty dream station, warm amber windows, a single old clock with no readable numerals, lavender fog swallowing the tracks, subtle stars above the platform roof. One tiny distant traveler silhouette, wistful and intimate mood. Train focal point on the center-right, dark low-detail space on the left. No readable signage, no prominent modern objects.\nPremium cinematic dreamscape illustration for DreamSpace, sophisticated storybook realism, deep midnight blue and indigo palette, restrained lavender rim lighting, subtle warm moonlit gold, soft volumetric clouds, elegant atmospheric depth, detailed focal subject with calm low-detail negative space, consistent art direction, polished fantasy editorial artwork. No typography, no letters, no logos, no watermark, no UI, no borders, no phone mockup, no excessive bloom, no neon cyberpunk, no cartoon emoji style. Horizontal 4:3 composition.",
+    "resolution": "2k",
+    "quality": "medium",
+    "output_format": "png",
+    "aspect_ratio": "4:3"
+  },
+  "status": "completed",
+  "file": "assets\\dreams\\last_train.png",
+  "width": 2224,
+  "height": 1664,
+  "bytes": 4761918
+}

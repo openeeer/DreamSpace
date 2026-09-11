@@ -1,0 +1,16 @@
+{
+  "model": "openai/gpt-image-2.5-sunburst/text-to-image",
+  "task_id": "0dd5c89cc46d463bbdc646e92c87a710",
+  "request": {
+    "prompt": "A delicate translucent glass staircase suspended in midnight-blue space, rising diagonally from lower center toward the upper right, soft lavender edges and tiny pale-gold reflections, distant moon behind thin clouds, a subtle floating mirror beside the upper landing. Beautiful impossible architecture, highly refined glass material, calm sparse composition. Dark quiet left third. Readable staircase silhouette in a square crop. A sense of quiet ascent into the unknown.\nPremium cinematic dreamscape illustration for DreamSpace, sophisticated storybook realism, deep midnight blue and indigo palette, restrained lavender rim lighting, subtle warm moonlit gold, soft volumetric clouds, elegant atmospheric depth, detailed focal subject with calm low-detail negative space, consistent art direction, polished fantasy editorial artwork. No typography, no letters, no logos, no watermark, no UI, no borders, no phone mockup, no excessive bloom, no neon cyberpunk, no cartoon emoji style. Horizontal 4:3 composition.",
+    "resolution": "2k",
+    "quality": "medium",
+    "output_format": "png",
+    "aspect_ratio": "4:3"
+  },
+  "status": "completed",
+  "file": "assets\\dreams\\glass_staircase.png",
+  "width": 2224,
+  "height": 1664,
+  "bytes": 4280847
+}

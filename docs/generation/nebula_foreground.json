@@ -1,0 +1,16 @@
+{
+  "model": "openai/gpt-image-2.5-sunburst/text-to-image",
+  "task_id": "2202f778bb2c4abd82f0f25fa5425a6b",
+  "request": {
+    "prompt": "An isolated wispy bank of midnight-indigo and muted lavender dream clouds, panoramic 3:2 composition, soft translucent edges fading naturally to full transparency, subtle cool moonlight along a few cloud rims, sparse fine dust, quiet center, usable as a foreground parallax overlay. Transparent alpha background, no sky rectangle, no stars with hard edges, no objects, no typography, no frame, no checkerboard pattern baked into the image.",
+    "resolution": "2k",
+    "quality": "medium",
+    "output_format": "png",
+    "aspect_ratio": "3:2"
+  },
+  "status": "completed",
+  "file": "assets\\backgrounds\\nebula_foreground.png",
+  "width": 2352,
+  "height": 1568,
+  "bytes": 4691104
+}

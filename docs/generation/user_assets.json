@@ -1,0 +1,59 @@
+[
+  {
+    "file": "assets/dreams/moon_library.png",
+    "width": 2365,
+    "height": 1774,
+    "mode": "RGB",
+    "alpha_range": null,
+    "sha256": "379af3254459ea5de6012ca835d5b99bdd901d6cf0d91fcf54749cec865c7eb2",
+    "source": "user archive"
+  },
+  {
+    "file": "assets/backgrounds/cosmic_background.png",
+    "width": 1391,
+    "height": 3015,
+    "mode": "RGB",
+    "alpha_range": null,
+    "sha256": "71b0e246eb977d7561a2f86f4d158905e045e2d9624efcbc690bae3ff901c3f1",
+    "source": "user archive"
+  },
+  {
+    "file": "assets/dreams/ocean_without_end.png",
+    "width": 2365,
+    "height": 1774,
+    "mode": "RGB",
+    "alpha_range": null,
+    "sha256": "d9e1761bc47794a290c62bc03df8aa4f82e146e04270d9ab9ed861a35a3106e4",
+    "source": "user archive"
+  },
+  {
+    "file": "assets/dreams/red_forest.png",
+    "width": 2365,
+    "height": 1774,
+    "mode": "RGB",
+    "alpha_range": null,
+    "sha256": "e2f36350c404937a23205e15cd56d35006304d66690eb03bfa81397928a683db",
+    "source": "user archive"
+  },
+  {
+    "file": "assets/dreams/empty_city.png",
+    "width": 2365,
+    "height": 1774,
+    "mode": "RGB",
+    "alpha_range": null,
+    "sha256": "937ca96799c51832494ba9ef5737e9ad46474c3518e2902d6bf8702e4915f1b6",
+    "source": "user archive"
+  },
+  {
+    "file": "assets/backgrounds/nebula_foreground.png",
+    "width": 1586,
+    "height": 992,
+    "mode": "RGBA",
+    "alpha_range": [
+      0,
+      254
+    ],
+    "sha256": "5be1d39a4eabf6c2d464f9d624c11da6bffd076a1e533a1c3f67c45770d1c4e5",
+    "source": "user archive"
+  }
+]

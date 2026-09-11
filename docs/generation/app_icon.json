@@ -1,0 +1,16 @@
+{
+  "model": "openai/gpt-image-2.5-sunburst/text-to-image",
+  "task_id": "2ee61ef27d0f4c668b39449d6b720ac5",
+  "request": {
+    "prompt": "A premium mobile app icon concept for DreamSpace: one sculptural pearl-lavender crescent moon embracing a tiny four-point star, centered on a deep midnight-indigo background, subtle dimensional shading and a restrained soft halo, bold simple silhouette readable at 48 pixels, generous clear padding around the symbol. Square full-bleed composition, no rounded corners baked in, no text, no border, no tiny scenery, no excessive sparkle. Elegant, distinctive, quiet and magical.",
+    "resolution": "2k",
+    "quality": "medium",
+    "output_format": "png",
+    "aspect_ratio": "1:1"
+  },
+  "status": "completed",
+  "file": "assets\\branding\\app_icon.png",
+  "width": 1920,
+  "height": 1920,
+  "bytes": 3845434
+}

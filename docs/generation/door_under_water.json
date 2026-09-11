@@ -1,0 +1,16 @@
+{
+  "model": "openai/gpt-image-2.5-sunburst/text-to-image",
+  "task_id": "92ffc59ce58040409d6a89da78523cb0",
+  "request": {
+    "prompt": "An ancient freestanding doorway on the floor of a deep midnight-blue ocean, positioned center-right, a soft warm moonlike light shining through the open door, delicate stairs leading to it, suspended particles and restrained blue caustics, distant shadowy rocks, profound dreamlike stillness. No divers, no sea monsters, no text. Left third dark and low detail. Door clearly recognizable in a square crop, luminous threshold contrasting against a very dark ocean.\nPremium cinematic dreamscape illustration for DreamSpace, sophisticated storybook realism, deep midnight blue and indigo palette, restrained lavender rim lighting, subtle warm moonlit gold, soft volumetric clouds, elegant atmospheric depth, detailed focal subject with calm low-detail negative space, consistent art direction, polished fantasy editorial artwork. No typography, no letters, no logos, no watermark, no UI, no borders, no phone mockup, no excessive bloom, no neon cyberpunk, no cartoon emoji style. Horizontal 4:3 composition.",
+    "resolution": "2k",
+    "quality": "medium",
+    "output_format": "png",
+    "aspect_ratio": "4:3"
+  },
+  "status": "completed",
+  "file": "assets\\dreams\\door_under_water.png",
+  "width": 2224,
+  "height": 1664,
+  "bytes": 5361486
+}
