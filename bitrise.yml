@@ -60,11 +60,11 @@ workflows:
       - deploy-to-bitrise-io@2: {}
 
   ios-compile:
-    description: Compile iOS on a macOS Xcode stack without Apple signing credentials.
+    description: Build an unsigned device IPA for signing in ESign, on a macOS Xcode stack.
     before_run: [_prepare]
     steps:
       - script@1:
-          title: Build unsigned iOS app
+          title: Build unsigned IPA for ESign
           inputs:
             - content: |-
                 #!/usr/bin/env bash
@@ -72,7 +72,7 @@ workflows:
                 cd "$BITRISE_SOURCE_DIR/$PROJECT_LOCATION"
                 flutter build ios --release --no-codesign
                 mkdir -p "$BITRISE_DEPLOY_DIR"
-                ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app "$BITRISE_DEPLOY_DIR/DreamSpace-unsigned.app.zip"
+                bash tools/package_unsigned_ipa.sh build/ios/iphoneos/Runner.app "$BITRISE_DEPLOY_DIR/DreamSpace-unsigned.ipa"
       - deploy-to-bitrise-io@2: {}
 
   ios-simulator:

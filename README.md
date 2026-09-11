@@ -58,9 +58,9 @@ Release Android пока подписывается debug-ключом для у
 Добавь проект в Git-репозиторий, подключи его к Codemagic и выбери workflow из `codemagic.yaml`.
 
 - `android-demo`: анализ, тесты, APK.
-- `ios-compile`: анализ, тесты, неподписанная iOS `.app`.
+- `ios-compile`: анализ, тесты, `DreamSpace-unsigned.ipa` для подписи в ESign.
 
-Неподписанная `.app` проверяет компиляцию, но не устанавливается на iPhone. Для установки / TestFlight настрой Apple Developer credentials и provisioning profile для `com.dreamspace.dreamspace` в Codemagic. Затем добавь `ios_signing`, шаг `xcode-project use-profiles` и `flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist` согласно выбранному типу distribution. Секреты хранятся в Codemagic, а не в YAML.
+Скачай `DreamSpace-unsigned.ipa` из артефактов сборки, импортируй в ESign, подпиши своим действующим сертификатом и совместимым provisioning profile, затем установи. IPA содержит `Payload/Runner.app`; Apple signing в CI для этого сценария не требуется. Для публикации в TestFlight потребуется отдельно настроить подпись и экспорт в CI.
 
 На Windows iOS-сборка не выполняется. Реальная доставка уведомлений, iOS swipe/back, внешняя Share Sheet и GPU-плавность требуют проверки на устройствах.
 
@@ -73,7 +73,7 @@ Release Android пока подписывается debug-ключом для у
 3. Выбери актуальный macOS/Xcode stack для iOS; для Android подойдёт Android stack с Java 17 или новее.
 4. Запусти нужный workflow:
    - `android-demo` — анализ, тесты и установочный `DreamSpace.apk`.
-   - `ios-compile` — анализ, тесты и `DreamSpace-unsigned.app.zip`; проверка компиляции без подписи.
+   - `ios-compile` — анализ, тесты и `DreamSpace-unsigned.ipa` для ESign.
    - `ios-simulator` — приложение для iOS Simulator без подписи.
 5. Забери результат в **Apps & Artifacts** сборки.
 

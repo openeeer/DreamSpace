@@ -22,7 +22,7 @@ workflows:
       - build/app/outputs/flutter-apk/*.apk
 
   ios-compile:
-    name: DreamSpace iOS compile check
+    name: DreamSpace unsigned IPA for ESign
     max_build_duration: 45
     instance_type: mac_mini_m2
     environment:
@@ -40,7 +40,7 @@ workflows:
           flutter test
       - name: Build iOS without signing
         script: flutter build ios --release --no-codesign
-      - name: Package unsigned app
-        script: ditto -c -k --sequesterRsrc --keepParent build/ios/iphoneos/Runner.app build/ios/DreamSpace-unsigned.app.zip
+      - name: Package unsigned IPA for ESign
+        script: bash tools/package_unsigned_ipa.sh
     artifacts:
-      - build/ios/DreamSpace-unsigned.app.zip
+      - build/ios/DreamSpace-unsigned.ipa
