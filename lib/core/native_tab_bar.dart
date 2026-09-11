@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'design.dart';
@@ -56,6 +57,9 @@ class _DreamTabBarState extends State<DreamTabBar> {
       return SizedBox(
         height: 62,
         child: UiKitView(
+          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+            Factory<EagerGestureRecognizer>(EagerGestureRecognizer.new),
+          },
           viewType: 'dreamspace/native-tabs',
           creationParams: configuration,
           creationParamsCodec: const StandardMessageCodec(),

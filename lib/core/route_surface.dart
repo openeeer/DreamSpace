@@ -4,18 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../data/providers.dart';
 import 'design.dart';
 
-/// Every route owns an opaque backdrop, including during interactive back swipes.
-class DreamRoutePage extends Page<void> {
-  const DreamRoutePage({required super.key, required this.child});
-  final Widget child;
-
-  @override
-  Route<void> createRoute(BuildContext context) => CupertinoPageRoute<void>(
-    settings: this,
-    builder: (_) => CosmicBackground(child: child),
-  );
-}
-
+/// CupertinoPage reads current Page settings on every router update.
+/// Closing a route builder over an old Page freezes shell branch updates.
 Page<void> dreamRoute(BuildContext context, GoRouterState state, Widget child) {
   final reduced =
       MediaQuery.disableAnimationsOf(context) ||
@@ -26,5 +16,8 @@ Page<void> dreamRoute(BuildContext context, GoRouterState state, Widget child) {
           key: state.pageKey,
           child: CosmicBackground(child: child),
         )
-      : DreamRoutePage(key: state.pageKey, child: child);
+      : CupertinoPage<void>(
+          key: state.pageKey,
+          child: CosmicBackground(child: child),
+        );
 }

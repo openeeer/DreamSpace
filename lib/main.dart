@@ -266,7 +266,7 @@ class DreamShell extends ConsumerWidget {
                 if (ref.read(settingsProvider)['haptics'] != 'false') {
                   HapticFeedback.selectionClick();
                 }
-                shell.goBranch(i);
+                shell.goBranch(i, initialLocation: i == shell.currentIndex);
               },
             ),
           ),

@@ -124,7 +124,8 @@ final class DreamNativeTabs: NSObject, FlutterPlatformView {
       effect.effect = nil
     } else if #available(iOS 26.0, *) {
       let glass = UIGlassEffect(style: .regular)
-      glass.isInteractive = true
+      // The shared background must not compete with its UIButton children.
+      glass.isInteractive = false
       effect.effect = glass
     } else {
       effect.effect = UIBlurEffect(style: .systemMaterial)
@@ -148,7 +149,9 @@ final class DreamNativeTabs: NSObject, FlutterPlatformView {
   }
 
   @objc private func selectTab(_ sender: UIButton) {
-    // Selection remains controlled by the router, including deep links and back.
+    var next = configuration
+    next["index"] = sender.tag
+    update(next)
     channel.invokeMethod("select", arguments: sender.tag)
   }
   @objc private func accessibilityChanged() { update(configuration) }

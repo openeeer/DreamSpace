@@ -34,6 +34,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
       details = false,
       saved = false,
       restored = false;
+  bool closing = false;
   int? lucidity, vividness;
   String artwork = artworkIds.first;
   List<DreamElement> elements = [], suggestions = [];
@@ -116,13 +117,17 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
   }
 
   void _changed() {
-    if (loading || saved) return;
+    if (loading || saved || closing) return;
     debounce?.cancel();
     debounce = Timer(const Duration(milliseconds: 450), _persistDraft);
   }
 
   Future<void> _persistDraft() {
-    if (saved || loading || body.text.trim().isEmpty) return pending;
+    if (saved ||
+        loading ||
+        (body.text.trim().isEmpty && title.text.trim().isEmpty)) {
+      return pending;
+    }
     final value = _value(), repo = ref.read(repositoryProvider);
     pending = pending.then((_) => repo.saveDraft(value)).catchError((Object e) {
       if (mounted) setState(() => error = 'draft');
@@ -205,6 +210,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
   }
 
   Future<void> close() async {
+    if (busy || closing) return;
+    closing = true;
+    FocusScope.of(context).unfocus();
     debounce?.cancel();
     await _persistDraft();
     if (mounted) {
@@ -225,7 +233,16 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
   Widget build(BuildContext context) {
     final en = ref.watch(englishProvider);
     if (loading) {
-      return const Scaffold(body: Center(child: CupertinoActivityIndicator()));
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: tr(en, 'Закрыть', 'Close'),
+            icon: const Icon(CupertinoIcons.xmark),
+            onPressed: close,
+          ),
+        ),
+        body: const Center(child: CupertinoActivityIndicator()),
+      );
     }
     return PopScope(
       canPop: saved,
@@ -259,7 +276,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                             ? tr(en, 'Новый сон', 'New Dream')
                             : tr(en, 'Редактировать', 'Edit Dream'),
                         textAlign: TextAlign.center,
-                        style: display(24),
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     IconButton(
@@ -282,9 +302,17 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                               }
                               debounce?.cancel();
                               await pending;
-                              saved = true;
                               await ref.read(repositoryProvider).clearDraft();
-                              if (context.mounted) context.pop();
+                              if (!mounted) return;
+                              setState(() => saved = true);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (!mounted) return;
+                                if (context.canPop()) {
+                                  context.pop();
+                                } else {
+                                  context.go('/home');
+                                }
+                              });
                             },
                     ),
                   ],
@@ -292,6 +320,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
               ),
               Expanded(
                 child: ListView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
                   children: [
                     if (restored)
@@ -328,6 +358,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                     const SizedBox(height: 24),
                     TextField(
                       controller: body,
+                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
                       minLines: 7,
                       maxLines: null,
                       autofocus: widget.id == null && !restored,

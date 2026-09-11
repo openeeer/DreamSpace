@@ -13,8 +13,15 @@ class JournalScreen extends StatefulWidget {
 }
 
 class _JournalScreenState extends State<JournalScreen> {
+  final search = TextEditingController();
   String query = '';
   int filter = 0;
+  @override
+  void dispose() {
+    search.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => DreamsBuilder(
     builder: (dreams, en) {
@@ -36,6 +43,7 @@ class _JournalScreenState extends State<JournalScreen> {
         body: SafeArea(
           bottom: false,
           child: CustomScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             slivers: [
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
@@ -75,6 +83,9 @@ class _JournalScreenState extends State<JournalScreen> {
                     ),
                     const SizedBox(height: 18),
                     TextField(
+                      controller: search,
+                      textInputAction: TextInputAction.search,
+                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
                       onChanged: (s) => setState(() => query = s),
                       decoration: InputDecoration(
                         hintText: tr(
@@ -83,6 +94,23 @@ class _JournalScreenState extends State<JournalScreen> {
                           'Search dreams, places, symbols',
                         ),
                         prefixIcon: const Icon(CupertinoIcons.search, size: 19),
+                        suffixIcon: query.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: tr(
+                                  en,
+                                  'Очистить поиск',
+                                  'Clear search',
+                                ),
+                                icon: const Icon(
+                                  CupertinoIcons.xmark_circle_fill,
+                                  size: 18,
+                                ),
+                                onPressed: () {
+                                  search.clear();
+                                  setState(() => query = '');
+                                },
+                              ),
                       ),
                     ),
                     const SizedBox(height: 8),

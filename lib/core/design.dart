@@ -167,8 +167,10 @@ class _CosmicBackgroundState extends ConsumerState<CosmicBackground>
               errorBuilder: (_, error, stack) => const SizedBox.shrink(),
             ),
           ),
-        RepaintBoundary(
-          child: CustomPaint(painter: _CosmosPainter(motion, light)),
+        IgnorePointer(
+          child: RepaintBoundary(
+            child: CustomPaint(painter: _CosmosPainter(motion, light)),
+          ),
         ),
         if (!light)
           Positioned(
@@ -756,7 +758,7 @@ class _PlaceholderArt extends CustomPainter {
   bool shouldRepaint(covariant _PlaceholderArt old) => old.index != index;
 }
 
-class DreamCard extends StatelessWidget {
+class DreamCard extends ConsumerWidget {
   const DreamCard(
     this.dream, {
     super.key,
@@ -766,12 +768,14 @@ class DreamCard extends StatelessWidget {
   final Dream dream;
   final bool en, large;
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context, WidgetRef ref) => Padding(
     padding: const EdgeInsets.only(bottom: 16),
     child: Semantics(
       button: true,
       label: dreamTitle(dream, en),
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onLongPress: () => _actions(context, ref),
         onTap: () => context.push('/dream/${dream.id}'),
         child: SizedBox(
           height:
@@ -865,6 +869,52 @@ class DreamCard extends StatelessWidget {
       ),
     ),
   );
+
+  Future<void> _actions(BuildContext context, WidgetRef ref) async {
+    if (ref.read(settingsProvider)['haptics'] != 'false') {
+      HapticFeedback.selectionClick();
+    }
+    final action = await showCupertinoModalPopup<String>(
+      context: context,
+      builder: (sheet) => CupertinoActionSheet(
+        title: Text(dreamTitle(dream, en)),
+        actions: [
+          for (final (value, label) in [
+            ('open', tr(en, 'Открыть сон', 'Open dream')),
+            (
+              'favorite',
+              dream.favorite
+                  ? tr(en, 'Убрать из избранного', 'Remove from favorites')
+                  : tr(en, 'В избранное', 'Add to favorites'),
+            ),
+            ('edit', tr(en, 'Редактировать', 'Edit')),
+            ('map', tr(en, 'Показать на карте', 'Show on map')),
+          ])
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(sheet, value),
+              child: Text(label),
+            ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(sheet),
+          child: Text(tr(en, 'Отмена', 'Cancel')),
+        ),
+      ),
+    );
+    if (!context.mounted || action == null) return;
+    switch (action) {
+      case 'open':
+        context.push('/dream/${dream.id}');
+      case 'edit':
+        context.push('/record?id=${dream.id}');
+      case 'map':
+        context.go('/map?focus=${dream.id}');
+      case 'favorite':
+        await ref
+            .read(repositoryProvider)
+            .save(dream.copyWith(favorite: !dream.favorite));
+    }
+  }
 }
 
 class EmptyDreams extends StatelessWidget {
