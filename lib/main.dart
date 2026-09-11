@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/design.dart';
+import 'core/native_tab_bar.dart';
+import 'core/route_surface.dart';
 import 'core/notifications.dart';
 import 'data/database.dart';
 import 'data/providers.dart';
@@ -94,7 +95,8 @@ GoRouter createRouter(bool onboarded) => GoRouter(
   routes: [
     GoRoute(
       path: '/onboarding',
-      builder: (_, state) => const OnboardingScreen(),
+      pageBuilder: (context, state) =>
+          dreamRoute(context, state, const OnboardingScreen()),
     ),
     StatefulShellRoute(
       navigatorContainerBuilder: (context, shell, children) => Stack(
@@ -112,7 +114,8 @@ GoRouter createRouter(bool onboarded) => GoRouter(
             ),
         ],
       ),
-      builder: (context, state, shell) => DreamShell(shell: shell),
+      pageBuilder: (context, state, shell) =>
+          dreamRoute(context, state, DreamShell(shell: shell)),
       branches: [
         StatefulShellBranch(
           routes: [
@@ -149,24 +152,51 @@ GoRouter createRouter(bool onboarded) => GoRouter(
     ),
     GoRoute(
       path: '/record',
-      builder: (_, state) => EditorScreen(
-        id: state.uri.queryParameters['id'],
-        date: state.uri.queryParameters['date'],
+      pageBuilder: (context, state) => dreamRoute(
+        context,
+        state,
+        EditorScreen(
+          id: state.uri.queryParameters['id'],
+          date: state.uri.queryParameters['date'],
+        ),
       ),
     ),
     GoRoute(
       path: '/dream/:id',
-      builder: (_, state) => DetailScreen(id: state.pathParameters['id']!),
+      pageBuilder: (context, state) => dreamRoute(
+        context,
+        state,
+        DetailScreen(id: state.pathParameters['id']!),
+      ),
     ),
-    GoRoute(path: '/elements', builder: (_, state) => const ElementsScreen()),
+    GoRoute(
+      path: '/elements',
+      pageBuilder: (context, state) =>
+          dreamRoute(context, state, const ElementsScreen()),
+    ),
     GoRoute(
       path: '/elements/:id',
-      builder: (_, state) =>
-          ElementDetailScreen(id: state.pathParameters['id']!),
+      pageBuilder: (context, state) => dreamRoute(
+        context,
+        state,
+        ElementDetailScreen(id: state.pathParameters['id']!),
+      ),
     ),
-    GoRoute(path: '/insights', builder: (_, state) => const InsightsScreen()),
-    GoRoute(path: '/calendar', builder: (_, state) => const CalendarScreen()),
-    GoRoute(path: '/settings', builder: (_, state) => const SettingsScreen()),
+    GoRoute(
+      path: '/insights',
+      pageBuilder: (context, state) =>
+          dreamRoute(context, state, const InsightsScreen()),
+    ),
+    GoRoute(
+      path: '/calendar',
+      pageBuilder: (context, state) =>
+          dreamRoute(context, state, const CalendarScreen()),
+    ),
+    GoRoute(
+      path: '/settings',
+      pageBuilder: (context, state) =>
+          dreamRoute(context, state, const SettingsScreen()),
+    ),
   ],
 );
 
@@ -195,7 +225,10 @@ class DreamSpaceApp extends ConsumerWidget {
         value: Theme.of(context).brightness == Brightness.dark
             ? SystemUiOverlayStyle.light
             : SystemUiOverlayStyle.dark,
-        child: CosmicBackground(
+        child: ColoredBox(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Palette.night
+              : const Color(0xfff3f1fa),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 860),
@@ -217,12 +250,6 @@ class DreamShell extends ConsumerWidget {
     final labels = en
         ? ['Home', 'Journal', 'Map', 'Profile']
         : ['Главная', 'Дневник', 'Карта', 'Профиль'];
-    const icons = [
-      CupertinoIcons.house,
-      CupertinoIcons.book,
-      CupertinoIcons.share,
-      CupertinoIcons.person,
-    ];
     return Scaffold(
       body: Stack(
         children: [
@@ -230,72 +257,17 @@ class DreamShell extends ConsumerWidget {
           Positioned(
             left: 18,
             right: 18,
-            bottom: MediaQuery.paddingOf(context).bottom + 12,
-            child: DreamSurface(
-              glass: true,
-              radius: 38,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Row(
-                children: [
-                  for (var i = 0; i < 4; i++)
-                    Expanded(
-                      child: Semantics(
-                        selected: shell.currentIndex == i,
-                        button: true,
-                        label: labels[i],
-                        child: CupertinoButton(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          onPressed: () {
-                            if (ref.read(settingsProvider)['haptics'] !=
-                                'false') {
-                              HapticFeedback.selectionClick();
-                            }
-                            shell.goBranch(i);
-                          },
-                          child: AnimatedContainer(
-                            duration: MediaQuery.disableAnimationsOf(context)
-                                ? Duration.zero
-                                : const Duration(milliseconds: 240),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(22),
-                              color: shell.currentIndex == i
-                                  ? Palette.lavender.withValues(alpha: .14)
-                                  : Colors.transparent,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  icons[i],
-                                  size: 24,
-                                  color: shell.currentIndex == i
-                                      ? Palette.lavender
-                                      : Theme.of(context).colorScheme.onSurface,
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  labels[i],
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: shell.currentIndex == i
-                                        ? Palette.lavender
-                                        : Theme.of(
-                                            context,
-                                          ).colorScheme.onSurface,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+            bottom: MediaQuery.paddingOf(context).bottom + 2,
+            child: DreamTabBar(
+              index: shell.currentIndex,
+              labels: labels,
+              opaque: ref.watch(settingsProvider)['opaque'] == 'true',
+              onSelected: (i) {
+                if (ref.read(settingsProvider)['haptics'] != 'false') {
+                  HapticFeedback.selectionClick();
+                }
+                shell.goBranch(i);
+              },
             ),
           ),
         ],

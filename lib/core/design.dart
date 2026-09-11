@@ -24,6 +24,13 @@ abstract final class Palette {
 String tr(bool en, String ru, String english) => en ? english : ru;
 String formatDate(DateTime date, bool en) =>
     DateFormat('d MMM y', en ? 'en' : 'ru').format(date);
+String dreamTitle(Dream dream, bool en) {
+  final legacy = RegExp(r'^(Сон|Dream) — \d{1,2} .+ \d{4}$');
+  return dream.title.trim().isEmpty || legacy.hasMatch(dream.title)
+      ? tr(en, 'Без названия', 'Untitled dream')
+      : dream.title;
+}
+
 TextStyle display(double size) => TextStyle(
   fontFamily: 'Lora',
   fontSize: size,
@@ -63,6 +70,7 @@ ThemeData dreamTheme({bool light = false}) {
     scaffoldBackgroundColor: Colors.transparent,
     fontFamily: 'Inter',
     splashFactory: NoSplash.splashFactory,
+    iconTheme: const IconThemeData(size: 21),
     textTheme: ThemeData(brightness: light ? Brightness.light : Brightness.dark)
         .textTheme
         .apply(
@@ -79,17 +87,20 @@ ThemeData dreamTheme({bool light = false}) {
       fillColor: light
           ? Colors.white.withValues(alpha: .7)
           : Palette.night.withValues(alpha: .5),
-      contentPadding: const EdgeInsets.all(18),
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      hintStyle: const TextStyle(fontSize: 14),
+      prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: Palette.lavender.withValues(alpha: .18)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: Palette.lavender),
       ),
     ),
@@ -263,8 +274,8 @@ class DreamSurface extends ConsumerWidget {
   const DreamSurface({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(18),
-    this.radius = 26,
+    this.padding = const EdgeInsets.all(16),
+    this.radius = 22,
     this.glass = false,
     this.onTap,
   });
@@ -360,7 +371,7 @@ class DreamButton extends ConsumerWidget {
       ],
     ),
     child: CupertinoButton(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       onPressed: busy
           ? null
           : onPressed == null
@@ -377,14 +388,14 @@ class DreamButton extends ConsumerWidget {
           if (busy)
             const CupertinoActivityIndicator(color: Colors.white)
           else
-            Icon(icon, color: Palette.text, size: 24),
+            Icon(icon, color: Palette.text, size: 21),
           const SizedBox(width: 12),
           Flexible(
             child: Text(
               label,
               style: const TextStyle(
                 color: Palette.text,
-                fontSize: 17,
+                fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -414,24 +425,47 @@ class DreamPage extends StatelessWidget {
       bottom: false,
       child: CustomScrollView(
         slivers: [
+          if (back)
+            SliverAppBar(
+              pinned: true,
+              primary: false,
+              toolbarHeight: 52,
+              backgroundColor: Theme.of(context).brightness == Brightness.dark
+                  ? Palette.night
+                  : const Color(0xfff3f1fa),
+              surfaceTintColor: Colors.transparent,
+              leading: IconButton(
+                onPressed: () => context.pop(),
+                icon: const Icon(CupertinoIcons.back),
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              ),
+              title: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              actions: actions,
+            ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 135),
+            padding: EdgeInsets.fromLTRB(
+              20,
+              back ? 12 : 10,
+              20,
+              back ? MediaQuery.paddingOf(context).bottom + 24 : 112,
+            ),
             sliver: SliverList.list(
               children: [
-                Row(
-                  children: [
-                    if (back)
-                      IconButton(
-                        onPressed: () => context.pop(),
-                        icon: const Icon(CupertinoIcons.back),
-                        tooltip: MaterialLocalizations.of(
-                          context,
-                        ).backButtonTooltip,
-                      ),
-                    Expanded(child: Text(title, style: display(32))),
-                    ...actions,
-                  ],
-                ),
+                if (!back)
+                  Row(
+                    children: [
+                      Expanded(child: Text(title, style: display(27))),
+                      ...actions,
+                    ],
+                  ),
                 if (subtitle != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -443,7 +477,7 @@ class DreamPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                const SizedBox(height: 26),
+                if (!back || subtitle != null) const SizedBox(height: 20),
                 ...children,
               ],
             ),
@@ -464,7 +498,7 @@ class SectionTitle extends StatelessWidget {
     padding: const EdgeInsets.only(bottom: 14),
     child: Row(
       children: [
-        Expanded(child: Text(title, style: display(23))),
+        Expanded(child: Text(title, style: display(21))),
         if (action != null)
           TextButton(
             onPressed: onTap,
@@ -498,27 +532,31 @@ class DreamChip extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     selected: selected,
     button: onTap != null,
-    child: GestureDetector(
-      onTap: onTap,
+    child: CupertinoButton(
+      padding: EdgeInsets.zero,
+      minimumSize: Size(0, onTap == null ? 30 : 44),
+      onPressed: onTap,
       child: Container(
-        constraints: BoxConstraints(minHeight: onTap == null ? 30 : 44),
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: (color ?? Palette.lavender).withValues(
-            alpha: selected ? .24 : .09,
+            alpha: selected ? .18 : .04,
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: (color ?? Palette.lavender).withValues(
-              alpha: selected ? .8 : .25,
+              alpha: selected ? .5 : .14,
             ),
             width: .7,
           ),
         ),
         child: Text(
           label,
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 13,
+            height: 1.15,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
@@ -534,7 +572,7 @@ class MoodOrb extends StatelessWidget {
     required this.en,
     this.selected = false,
     this.onTap,
-    this.size = 58,
+    this.size = 48,
   });
   final Mood mood;
   final bool en, selected;
@@ -732,21 +770,21 @@ class DreamCard extends StatelessWidget {
     padding: const EdgeInsets.only(bottom: 16),
     child: Semantics(
       button: true,
-      label: dream.title,
+      label: dreamTitle(dream, en),
       child: GestureDetector(
         onTap: () => context.push('/dream/${dream.id}'),
         child: SizedBox(
           height:
-              (large ? 276 : 184) *
+              (large ? 224 : 164) *
               math.max(1, MediaQuery.textScalerOf(context).scale(14) / 14),
-          child: Hero(
-            tag: 'dream-${dream.id}',
+          child: HeroMode(
+            enabled: false,
             child: Material(
               color: Colors.transparent,
               child: DreamArtwork(
                 dream.artwork,
                 child: Padding(
-                  padding: const EdgeInsets.all(22),
+                  padding: const EdgeInsets.all(18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -759,9 +797,9 @@ class DreamCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 9),
                       Text(
-                        dream.title,
+                        dreamTitle(dream, en),
                         style: display(
-                          large ? 30 : 24,
+                          large ? 26 : 22,
                         ).copyWith(color: Palette.text),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,

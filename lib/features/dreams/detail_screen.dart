@@ -21,7 +21,7 @@ class DetailScreen extends ConsumerWidget {
         );
       }
       return DreamPage(
-        title: tr(en, 'Сновидение', 'Dream'),
+        title: dreamTitle(dream, en),
         back: true,
         actions: [
           IconButton(
@@ -41,13 +41,8 @@ class DetailScreen extends ConsumerWidget {
           ),
         ],
         children: [
-          SizedBox(
-            height: 280,
-            child: Hero(tag: 'dream-$id', child: DreamArtwork(dream.artwork)),
-          ),
-          const SizedBox(height: 26),
-          Text(dream.title, style: display(36)),
-          const SizedBox(height: 12),
+          SizedBox(height: 220, child: DreamArtwork(dream.artwork)),
+          const SizedBox(height: 16),
           Text(
             formatDate(dream.date, en),
             style: const TextStyle(color: Palette.secondary),
@@ -69,7 +64,7 @@ class DetailScreen extends ConsumerWidget {
           DreamSurface(
             child: SelectableText(
               dream.description,
-              style: const TextStyle(fontSize: 17, height: 1.75),
+              style: const TextStyle(fontSize: 17, height: 1.55),
             ),
           ),
           for (final kind in ElementKind.values)

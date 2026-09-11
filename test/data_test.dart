@@ -5,6 +5,7 @@ import 'package:dreamspace/data/repository.dart';
 import 'package:dreamspace/data/demo.dart';
 import 'package:dreamspace/models/dream.dart';
 import 'package:dreamspace/features/insights/analytics.dart';
+import 'package:dreamspace/features/dream_map/map_screen.dart';
 
 void main() {
   late AppDatabase db;
@@ -100,5 +101,34 @@ void main() {
     expect(DreamStats(data, now: now).streak, 3);
     expect(DreamStats(data, now: now).longest, 3);
     expect(DreamStats(data, now: DateTime(2027, 1, 3)).streak, 0);
+  });
+  test('Map separates 100 colliding nodes including newly inserted dreams', () {
+    final date = DateTime(2026, 9, 12);
+    final dreams = List.generate(
+      100,
+      (i) => Dream(
+        id: '$i',
+        title: 'Dream $i',
+        description: '',
+        date: date,
+        createdAt: date,
+        updatedAt: date,
+      ),
+    );
+    final positions = layoutGraph(
+      dreams,
+      connections(dreams),
+      previous: {for (final d in dreams.take(99)) d.id: const Offset(650, 650)},
+    );
+    final points = positions.values.toList();
+    for (var i = 0; i < points.length; i++) {
+      for (var j = i + 1; j < points.length; j++) {
+        expect((points[i] - points[j]).distance, greaterThanOrEqualTo(159.99));
+      }
+    }
+    expect(
+      layoutGraph(dreams, connections(dreams), previous: positions),
+      positions,
+    );
   });
 }

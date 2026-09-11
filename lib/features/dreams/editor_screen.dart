@@ -96,11 +96,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
     return Dream(
       id: id,
       title: title.text.trim().isEmpty && finalSave
-          ? tr(
-              en,
-              'Сон — ${formatDate(date, en)}',
-              'Dream — ${formatDate(date, en)}',
-            )
+          ? tr(en, 'Без названия', 'Untitled dream')
           : title.text.trim(),
       description: body.text.trim(),
       date: date,

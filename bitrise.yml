@@ -70,6 +70,7 @@ workflows:
                 #!/usr/bin/env bash
                 set -euo pipefail
                 cd "$BITRISE_SOURCE_DIR/$PROJECT_LOCATION"
+                bash tools/check_ios_sdk.sh
                 flutter build ios --release --no-codesign
                 mkdir -p "$BITRISE_DEPLOY_DIR"
                 bash tools/package_unsigned_ipa.sh build/ios/iphoneos/Runner.app "$BITRISE_DEPLOY_DIR/DreamSpace-unsigned.ipa"
@@ -86,6 +87,7 @@ workflows:
                 #!/usr/bin/env bash
                 set -euo pipefail
                 cd "$BITRISE_SOURCE_DIR/$PROJECT_LOCATION"
+                bash tools/check_ios_sdk.sh
                 flutter build ios --simulator --debug
                 mkdir -p "$BITRISE_DEPLOY_DIR"
                 ditto -c -k --sequesterRsrc --keepParent build/ios/iphonesimulator/Runner.app "$BITRISE_DEPLOY_DIR/DreamSpace-simulator.app.zip"

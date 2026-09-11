@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -37,7 +38,7 @@ class _JournalScreenState extends State<JournalScreen> {
           child: CustomScrollView(
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
                 sliver: SliverList.list(
                   children: [
                     Row(
@@ -45,7 +46,7 @@ class _JournalScreenState extends State<JournalScreen> {
                         Expanded(
                           child: Text(
                             tr(en, 'Дневник', 'Journal'),
-                            style: display(34),
+                            style: display(27),
                           ),
                         ),
                         IconButton(
@@ -72,7 +73,7 @@ class _JournalScreenState extends State<JournalScreen> {
                         color: Palette.secondary,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 18),
                     TextField(
                       onChanged: (s) => setState(() => query = s),
                       decoration: InputDecoration(
@@ -81,12 +82,15 @@ class _JournalScreenState extends State<JournalScreen> {
                           'Поиск снов, мест, символов',
                           'Search dreams, places, symbols',
                         ),
-                        prefixIcon: const Icon(CupertinoIcons.search),
+                        prefixIcon: const Icon(CupertinoIcons.search, size: 19),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
                     SizedBox(
-                      height: 48,
+                      height: math.max(
+                        44,
+                        MediaQuery.textScalerOf(context).scale(15) + 20,
+                      ),
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [

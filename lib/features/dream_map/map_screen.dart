@@ -10,6 +10,7 @@ Map<String, Offset> layoutGraph(
   List<Dream> dreams,
   List<Connection> edges, {
   Map<String, Offset> previous = const {},
+  double nodeSpacing = 160,
 }) {
   final positions = <String, Offset>{};
   for (var i = 0; i < dreams.length; i++) {
@@ -19,7 +20,10 @@ Map<String, Offset> layoutGraph(
         previous[dreams[i].id] ??
         Offset(650 + math.cos(angle) * radius, 650 + math.sin(angle) * radius);
   }
-  if (previous.isNotEmpty) return positions;
+  if (previous.length == dreams.length &&
+      dreams.every((d) => previous.containsKey(d.id))) {
+    return positions;
+  }
   for (var iteration = 0; iteration < 70; iteration++) {
     final force = {for (final id in positions.keys) id: Offset.zero};
     for (var i = 0; i < dreams.length; i++) {
@@ -42,10 +46,29 @@ Map<String, Offset> layoutGraph(
     }
     for (final id in positions.keys) {
       final p = positions[id]! + force[id]!;
-      positions[id] = Offset(p.dx.clamp(80, 1220), p.dy.clamp(80, 1220));
+      positions[id] = p;
     }
   }
-  return positions;
+  // Reserve the complete node footprint (image + two-line caption), also for
+  // newly added dreams. Deterministic spiral placement guarantees separation.
+  final placed = <String, Offset>{};
+  for (final dream in dreams) {
+    final origin = positions[dream.id]!;
+    var candidate = origin;
+    var attempt = 0;
+    while (placed.values.any((p) => (p - candidate).distance < nodeSpacing)) {
+      attempt++;
+      final angle = attempt * 2.399963;
+      final radius = nodeSpacing * .55 * math.sqrt(attempt);
+      candidate = origin + Offset(math.cos(angle), math.sin(angle)) * radius;
+    }
+    placed[dream.id] = candidate;
+  }
+  if (placed.isEmpty) return placed;
+  final minX = placed.values.map((p) => p.dx).reduce(math.min);
+  final minY = placed.values.map((p) => p.dy).reduce(math.min);
+  final shift = Offset(math.max(0, 100 - minX), math.max(0, 100 - minY));
+  return placed.map((id, p) => MapEntry(id, p + shift));
 }
 
 class MapScreen extends StatefulWidget {
@@ -63,10 +86,14 @@ class _MapScreenState extends State<MapScreen> {
   bool mood = true, list = false, fitted = false;
   Set<ElementKind> kinds = ElementKind.values.toSet();
   Size viewport = Size.zero;
+  double normalScale = 1;
+  double layoutTextScale = 1;
+  bool showReset = false;
   @override
   void initState() {
     super.initState();
     selected = widget.focus;
+    camera.addListener(cameraChanged);
   }
 
   @override
@@ -94,6 +121,7 @@ class _MapScreenState extends State<MapScreen> {
     final scale = math
         .min(viewport.width / rect.width, viewport.height / rect.height)
         .clamp(.25, 1.1);
+    normalScale = scale;
     camera.value = Matrix4.identity()
       ..translateByDouble(
         viewport.width / 2 - rect.center.dx * scale,
@@ -101,23 +129,13 @@ class _MapScreenState extends State<MapScreen> {
         0,
         1,
       )
-      ..scaleByDouble(scale, scale, 1, 1);
+      ..scaleByDouble(scale, scale, scale, 1);
   }
 
-  void zoom(double factor) {
-    final old = camera.value.getMaxScaleOnAxis();
-    final next = (old * factor).clamp(.2, 2.5);
-    final point = camera.toScene(
-      Offset(viewport.width / 2, viewport.height / 2),
-    );
-    camera.value = Matrix4.identity()
-      ..translateByDouble(
-        viewport.width / 2 - point.dx * next,
-        viewport.height / 2 - point.dy * next,
-        0,
-        1,
-      )
-      ..scaleByDouble(next, next, 1, 1);
+  void cameraChanged() {
+    final changed =
+        (camera.value.getMaxScaleOnAxis() / normalScale - 1).abs() > .025;
+    if (mounted && changed != showReset) setState(() => showReset = changed);
   }
 
   @override
@@ -132,7 +150,19 @@ class _MapScreenState extends State<MapScreen> {
         }
       }
       final allEdges = connections(dreams);
-      positions = layoutGraph(dreams, allEdges, previous: positions);
+      final textScale = MediaQuery.textScalerOf(context).scale(12) / 12;
+      final changed =
+          positions.length != dreams.length ||
+          dreams.any((d) => !positions.containsKey(d.id)) ||
+          layoutTextScale != textScale;
+      positions = layoutGraph(
+        dreams,
+        allEdges,
+        previous: layoutTextScale == textScale ? positions : {},
+        nodeSpacing: 160 + math.max(0, textScale - 1) * 65,
+      );
+      layoutTextScale = textScale;
+      if (changed) fitted = false;
       final edges = connections(dreams, kinds: kinds, mood: mood);
       final current = dreams.where((d) => d.id == selected).firstOrNull;
       final related = edges
@@ -148,13 +178,13 @@ class _MapScreenState extends State<MapScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 12, 0),
+                padding: const EdgeInsets.fromLTRB(20, 10, 12, 0),
                 child: Row(
                   children: [
                     Expanded(
                       child: Text(
                         tr(en, 'Вселенная снов', 'Dream Universe'),
-                        style: display(30),
+                        style: display(26),
                       ),
                     ),
                     IconButton(
@@ -179,7 +209,10 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ),
               SizedBox(
-                height: 48,
+                height: math.max(
+                  44,
+                  MediaQuery.textScalerOf(context).scale(15) + 20,
+                ),
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -234,10 +267,12 @@ class _MapScreenState extends State<MapScreen> {
                       )
                     : LayoutBuilder(
                         builder: (context, constraints) {
-                          viewport = Size(
+                          final nextViewport = Size(
                             constraints.maxWidth,
-                            constraints.maxHeight - 110,
+                            math.max(1, constraints.maxHeight - 96),
                           );
+                          if (viewport != nextViewport) fitted = false;
+                          viewport = nextViewport;
                           if (!fitted) {
                             fitted = true;
                             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -247,7 +282,7 @@ class _MapScreenState extends State<MapScreen> {
                           return Stack(
                             children: [
                               Positioned.fill(
-                                bottom: 110,
+                                bottom: 96,
                                 child: InteractiveViewer(
                                   transformationController: camera,
                                   constrained: false,
@@ -258,8 +293,20 @@ class _MapScreenState extends State<MapScreen> {
                                     onTap: () =>
                                         setState(() => selected = null),
                                     child: SizedBox(
-                                      width: 1300,
-                                      height: 1300,
+                                      width: math.max(
+                                        1300,
+                                        positions.values
+                                                .map((p) => p.dx)
+                                                .reduce(math.max) +
+                                            120,
+                                      ),
+                                      height: math.max(
+                                        1300,
+                                        positions.values
+                                                .map((p) => p.dy)
+                                                .reduce(math.max) +
+                                            160,
+                                      ),
                                       child: Stack(
                                         children: [
                                           Positioned.fill(
@@ -275,11 +322,11 @@ class _MapScreenState extends State<MapScreen> {
                                           ),
                                           for (final d in dreams)
                                             Positioned(
-                                              left: positions[d.id]!.dx - 42,
-                                              top: positions[d.id]!.dy - 42,
+                                              left: positions[d.id]!.dx - 54,
+                                              top: positions[d.id]!.dy - 36,
                                               child: Semantics(
                                                 button: true,
-                                                label: d.title,
+                                                label: dreamTitle(d, en),
                                                 selected: d.id == selected,
                                                 child: GestureDetector(
                                                   onTap: () => setState(
@@ -298,8 +345,8 @@ class _MapScreenState extends State<MapScreen> {
                                                     child: Column(
                                                       children: [
                                                         Container(
-                                                          width: 84,
-                                                          height: 84,
+                                                          width: 72,
+                                                          height: 72,
                                                           decoration: BoxDecoration(
                                                             shape:
                                                                 BoxShape.circle,
@@ -340,9 +387,9 @@ class _MapScreenState extends State<MapScreen> {
                                                           height: 8,
                                                         ),
                                                         SizedBox(
-                                                          width: 100,
+                                                          width: 108,
                                                           child: Text(
-                                                            d.title,
+                                                            dreamTitle(d, en),
                                                             maxLines: 2,
                                                             textAlign: TextAlign
                                                                 .center,
@@ -368,40 +415,24 @@ class _MapScreenState extends State<MapScreen> {
                                   ),
                                 ),
                               ),
-                              Positioned(
-                                right: 16,
-                                top: 16,
-                                child: DreamSurface(
-                                  padding: const EdgeInsets.all(2),
-                                  glass: true,
-                                  child: Column(
-                                    children: [
-                                      IconButton(
-                                        tooltip: tr(
-                                          en,
-                                          'Приблизить',
-                                          'Zoom in',
-                                        ),
-                                        onPressed: () => zoom(1.3),
-                                        icon: const Icon(CupertinoIcons.plus),
+                              if (showReset)
+                                Positioned(
+                                  right: 16,
+                                  top: 16,
+                                  child: DreamSurface(
+                                    padding: const EdgeInsets.all(2),
+                                    glass: true,
+                                    child: IconButton(
+                                      key: const ValueKey('map-reset'),
+                                      tooltip: tr(en, 'Вся карта', 'Fit all'),
+                                      onPressed: fit,
+                                      icon: const Icon(
+                                        CupertinoIcons
+                                            .arrow_up_left_arrow_down_right,
                                       ),
-                                      IconButton(
-                                        tooltip: tr(en, 'Отдалить', 'Zoom out'),
-                                        onPressed: () => zoom(.77),
-                                        icon: const Icon(CupertinoIcons.minus),
-                                      ),
-                                      IconButton(
-                                        tooltip: tr(en, 'Вся карта', 'Fit all'),
-                                        onPressed: fit,
-                                        icon: const Icon(
-                                          CupertinoIcons
-                                              .arrow_up_left_arrow_down_right,
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ),
-                              ),
                               if (current != null)
                                 Positioned(
                                   left: 16,
@@ -418,8 +449,8 @@ class _MapScreenState extends State<MapScreen> {
                                           children: [
                                             Expanded(
                                               child: Text(
-                                                current.title,
-                                                style: display(23),
+                                                dreamTitle(current, en),
+                                                style: display(21),
                                               ),
                                             ),
                                             IconButton(
