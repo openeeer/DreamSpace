@@ -31,6 +31,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/profile/
     - assets/backgrounds/cosmic_background.webp
     - assets/backgrounds/nebula_foreground.webp
     - assets/dreams/moon_library.webp

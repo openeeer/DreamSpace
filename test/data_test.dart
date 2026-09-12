@@ -130,5 +130,26 @@ void main() {
       layoutGraph(dreams, connections(dreams), previous: positions),
       positions,
     );
+    final duplicateInput = [...dreams, dreams.first];
+    expect(
+      layoutGraph(duplicateInput, connections(dreams), previous: positions),
+      positions,
+    );
+    final added = Dream(
+      id: 'new',
+      title: 'New dream',
+      description: '',
+      date: date,
+      createdAt: date,
+      updatedAt: date,
+    );
+    final expanded = layoutGraph(
+      [...dreams, added],
+      connections(dreams),
+      previous: positions,
+    );
+    for (final entry in positions.entries) {
+      expect(expanded[entry.key], entry.value);
+    }
   });
 }

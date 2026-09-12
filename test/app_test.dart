@@ -50,7 +50,7 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.tap(find.text('Дневник'));
     await tester.pumpAndSettle();
-    expect(find.text('Поиск снов, мест, символов'), findsOneWidget);
+    expect(find.text('Поиск снов, мест, символов...'), findsOneWidget);
     await tester.tap(find.text('Карта'));
     await tester.pumpAndSettle();
     expect(find.text('Вселенная снов'), findsOneWidget);

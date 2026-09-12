@@ -1,544 +1,77 @@
 import 'dart:math' as math;
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../core/design.dart';
 import '../../models/dream.dart';
 import '../insights/analytics.dart';
+export 'universe_screen.dart' show MapScreen;
 
+/// Deterministic concentric constellation, with existing coordinates reserved
+/// first. IDs, not artwork or titles, identify dreams.
 Map<String, Offset> layoutGraph(
   List<Dream> dreams,
   List<Connection> edges, {
   Map<String, Offset> previous = const {},
   double nodeSpacing = 160,
 }) {
-  final positions = <String, Offset>{};
-  for (var i = 0; i < dreams.length; i++) {
-    final angle = i * 2.399963;
-    final radius = 80 + math.sqrt(i) * 105;
-    positions[dreams[i].id] =
-        previous[dreams[i].id] ??
-        Offset(650 + math.cos(angle) * radius, 650 + math.sin(angle) * radius);
+  final unique = {for (final d in dreams) d.id: d}.values.toList();
+  final degree = {for (final d in unique) d.id: 0.0};
+  for (final e in edges) {
+    if (!degree.containsKey(e.a) || !degree.containsKey(e.b)) continue;
+    degree[e.a] = degree[e.a]! + e.weight;
+    degree[e.b] = degree[e.b]! + e.weight;
   }
-  if (previous.length == dreams.length &&
-      dreams.every((d) => previous.containsKey(d.id))) {
-    return positions;
+  unique.sort((a, b) {
+    final order = degree[b.id]!.compareTo(degree[a.id]!);
+    return order == 0 ? a.id.compareTo(b.id) : order;
+  });
+  final seeds = <String, Offset>{};
+  for (var i = 0; i < unique.length; i++) {
+    final ring = ((i - 1) ~/ 7) + 1;
+    final angle =
+        -math.pi / 2 + ((i - 1) % 7) * math.pi * 2 / 7 + (i.isEven ? .13 : -.1);
+    seeds[unique[i].id] =
+        previous[unique[i].id] ??
+        (i == 0
+            ? const Offset(650, 700)
+            : Offset(
+                650 + math.cos(angle) * nodeSpacing * 1.6 * ring,
+                650 + math.sin(angle) * nodeSpacing * 2.05 * ring,
+              ));
   }
-  for (var iteration = 0; iteration < 70; iteration++) {
-    final force = {for (final id in positions.keys) id: Offset.zero};
-    for (var i = 0; i < dreams.length; i++) {
-      for (var j = i + 1; j < dreams.length; j++) {
-        final a = dreams[i].id, b = dreams[j].id;
-        final delta = positions[a]! - positions[b]!;
-        final distance = math.max(1.0, delta.distance);
-        final push =
-            delta / distance * (16000 / (distance * distance)).clamp(0, 12);
-        force[a] = force[a]! + push;
-        force[b] = force[b]! - push;
-      }
-    }
-    for (final e in edges) {
-      final delta = positions[e.b]! - positions[e.a]!;
-      final distance = math.max(1.0, delta.distance);
-      final pull = delta / distance * ((distance - 205) * .008);
-      force[e.a] = force[e.a]! + pull;
-      force[e.b] = force[e.b]! - pull;
-    }
-    for (final id in positions.keys) {
-      final p = positions[id]! + force[id]!;
-      positions[id] = p;
-    }
-  }
-  // Reserve the complete node footprint (image + two-line caption), also for
-  // newly added dreams. Deterministic spiral placement guarantees separation.
+  final ordered = [...unique]
+    ..sort(
+      (a, b) => (previous.containsKey(b.id) ? 1 : 0).compareTo(
+        previous.containsKey(a.id) ? 1 : 0,
+      ),
+    );
   final placed = <String, Offset>{};
-  for (final dream in dreams) {
-    final origin = positions[dream.id]!;
+  for (final d in ordered) {
+    final origin = seeds[d.id]!;
     var candidate = origin;
     var attempt = 0;
     while (placed.values.any((p) => (p - candidate).distance < nodeSpacing)) {
       attempt++;
       final angle = attempt * 2.399963;
-      final radius = nodeSpacing * .55 * math.sqrt(attempt);
-      candidate = origin + Offset(math.cos(angle), math.sin(angle)) * radius;
+      candidate =
+          origin +
+          Offset(math.cos(angle), math.sin(angle)) *
+              nodeSpacing *
+              .55 *
+              math.sqrt(attempt);
     }
-    placed[dream.id] = candidate;
-  }
-  if (placed.isEmpty) return placed;
-  final minX = placed.values.map((p) => p.dx).reduce(math.min);
-  final minY = placed.values.map((p) => p.dy).reduce(math.min);
-  final shift = Offset(math.max(0, 100 - minX), math.max(0, 100 - minY));
-  return placed.map((id, p) => MapEntry(id, p + shift));
-}
-
-class MapScreen extends StatefulWidget {
-  const MapScreen({super.key, this.focus});
-  final String? focus;
-  @override
-  State<MapScreen> createState() => _MapScreenState();
-}
-
-class _MapScreenState extends State<MapScreen> {
-  final camera = TransformationController();
-  Map<String, Offset> positions = {};
-  String? selected;
-  String query = '';
-  bool mood = true, list = false, fitted = false;
-  Set<ElementKind> kinds = ElementKind.values.toSet();
-  Size viewport = Size.zero;
-  double normalScale = 1;
-  double layoutTextScale = 1;
-  bool showReset = false;
-  @override
-  void initState() {
-    super.initState();
-    selected = widget.focus;
-    camera.addListener(cameraChanged);
-  }
-
-  @override
-  void didUpdateWidget(covariant MapScreen old) {
-    super.didUpdateWidget(old);
-    if (old.focus != widget.focus) selected = widget.focus;
-  }
-
-  @override
-  void dispose() {
-    camera.dispose();
-    super.dispose();
-  }
-
-  void fit() {
-    if (positions.isEmpty || viewport.isEmpty) return;
-    final xs = positions.values.map((p) => p.dx),
-        ys = positions.values.map((p) => p.dy);
-    final rect = Rect.fromLTRB(
-      xs.reduce(math.min) - 85,
-      ys.reduce(math.min) - 85,
-      xs.reduce(math.max) + 85,
-      ys.reduce(math.max) + 85,
-    );
-    final scale = math
-        .min(viewport.width / rect.width, viewport.height / rect.height)
-        .clamp(.25, 1.1);
-    normalScale = scale;
-    camera.value = Matrix4.identity()
-      ..translateByDouble(
-        viewport.width / 2 - rect.center.dx * scale,
-        viewport.height / 2 - rect.center.dy * scale,
-        0,
-        1,
-      )
-      ..scaleByDouble(scale, scale, scale, 1);
-  }
-
-  void cameraChanged() {
-    final changed =
-        (camera.value.getMaxScaleOnAxis() / normalScale - 1).abs() > .025;
-    if (mounted && changed != showReset) setState(() => showReset = changed);
-  }
-
-  @override
-  Widget build(BuildContext context) => DreamsBuilder(
-    builder: (all, en) {
-      final dreams = all.take(100).toList();
-      if (widget.focus != null && !dreams.any((d) => d.id == widget.focus)) {
-        final focused = all.where((d) => d.id == widget.focus).firstOrNull;
-        if (focused != null) {
-          if (dreams.length == 100) dreams.removeLast();
-          dreams.add(focused);
-        }
+    // Grow toward positive canvas coordinates, keeping existing nodes stable.
+    if (candidate.dx < 100 || candidate.dy < 100) {
+      candidate = Offset(
+        math.max(100, candidate.dx),
+        math.max(100, candidate.dy),
+      );
+      while (placed.values.any((p) => (p - candidate).distance < nodeSpacing)) {
+        candidate += Offset(nodeSpacing, nodeSpacing * .5);
       }
-      final allEdges = connections(dreams);
-      final textScale = MediaQuery.textScalerOf(context).scale(12) / 12;
-      final changed =
-          positions.length != dreams.length ||
-          dreams.any((d) => !positions.containsKey(d.id)) ||
-          layoutTextScale != textScale;
-      positions = layoutGraph(
-        dreams,
-        allEdges,
-        previous: layoutTextScale == textScale ? positions : {},
-        nodeSpacing: 160 + math.max(0, textScale - 1) * 65,
-      );
-      layoutTextScale = textScale;
-      if (changed) fitted = false;
-      final edges = connections(dreams, kinds: kinds, mood: mood);
-      final current = dreams.where((d) => d.id == selected).firstOrNull;
-      final related = edges
-          .where((e) => e.a == selected || e.b == selected)
-          .toList();
-      final highlighted = {
-        selected,
-        ...related.expand((e) => [e.a, e.b]),
-      };
-      return Scaffold(
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 12, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        tr(en, 'Вселенная снов', 'Dream Universe'),
-                        style: display(26),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: tr(en, 'Список / карта', 'List / map'),
-                      onPressed: () => setState(() => list = !list),
-                      icon: Icon(
-                        list ? CupertinoIcons.map : CupertinoIcons.list_bullet,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                child: TextField(
-                  onChanged: (s) => setState(() => query = s),
-                  decoration: InputDecoration(
-                    hintText: tr(en, 'Найти сон во вселенной', 'Find a dream'),
-                    prefixIcon: const Icon(CupertinoIcons.search, size: 20),
-                    isDense: true,
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: math.max(
-                  44,
-                  MediaQuery.textScalerOf(context).scale(15) + 20,
-                ),
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    for (final kind in ElementKind.values)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: DreamChip(
-                          switch (kind) {
-                            ElementKind.symbol => tr(en, 'Символы', 'Symbols'),
-                            ElementKind.character => tr(en, 'Люди', 'People'),
-                            ElementKind.place => tr(en, 'Места', 'Places'),
-                          },
-                          selected: kinds.contains(kind),
-                          onTap: () => setState(
-                            () => kinds.contains(kind)
-                                ? kinds.remove(kind)
-                                : kinds.add(kind),
-                          ),
-                        ),
-                      ),
-                    DreamChip(
-                      tr(en, 'Эмоции', 'Mood'),
-                      selected: mood,
-                      onTap: () => setState(() => mood = !mood),
-                    ),
-                  ],
-                ),
-              ),
-              if (all.length > 100)
-                Text(
-                  tr(
-                    en,
-                    'Показаны последние 100 снов',
-                    'Showing the latest 100 dreams',
-                  ),
-                  style: const TextStyle(fontSize: 12),
-                ),
-              Expanded(
-                child: dreams.isEmpty
-                    ? SingleChildScrollView(child: EmptyDreams(en: en))
-                    : list || query.isNotEmpty
-                    ? ListView(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 140),
-                        children: [
-                          for (final d in all.where(
-                            (d) =>
-                                normalize(d.title).contains(normalize(query)),
-                          ))
-                            DreamCard(d, en: en),
-                        ],
-                      )
-                    : LayoutBuilder(
-                        builder: (context, constraints) {
-                          final nextViewport = Size(
-                            constraints.maxWidth,
-                            math.max(1, constraints.maxHeight - 96),
-                          );
-                          if (viewport != nextViewport) fitted = false;
-                          viewport = nextViewport;
-                          if (!fitted) {
-                            fitted = true;
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted) fit();
-                            });
-                          }
-                          return Stack(
-                            children: [
-                              Positioned.fill(
-                                bottom: 96,
-                                child: InteractiveViewer(
-                                  transformationController: camera,
-                                  constrained: false,
-                                  boundaryMargin: const EdgeInsets.all(1600),
-                                  minScale: .2,
-                                  maxScale: 2.5,
-                                  child: GestureDetector(
-                                    onTap: () =>
-                                        setState(() => selected = null),
-                                    child: SizedBox(
-                                      width: math.max(
-                                        1300,
-                                        positions.values
-                                                .map((p) => p.dx)
-                                                .reduce(math.max) +
-                                            120,
-                                      ),
-                                      height: math.max(
-                                        1300,
-                                        positions.values
-                                                .map((p) => p.dy)
-                                                .reduce(math.max) +
-                                            160,
-                                      ),
-                                      child: Stack(
-                                        children: [
-                                          Positioned.fill(
-                                            child: CustomPaint(
-                                              painter: ConnectionsPainter(
-                                                positions,
-                                                selected == null
-                                                    ? edges.take(150).toList()
-                                                    : related,
-                                                selected,
-                                              ),
-                                            ),
-                                          ),
-                                          for (final d in dreams)
-                                            Positioned(
-                                              left: positions[d.id]!.dx - 54,
-                                              top: positions[d.id]!.dy - 36,
-                                              child: Semantics(
-                                                button: true,
-                                                label: dreamTitle(d, en),
-                                                selected: d.id == selected,
-                                                child: GestureDetector(
-                                                  onTap: () => setState(
-                                                    () => selected = d.id,
-                                                  ),
-                                                  child: AnimatedOpacity(
-                                                    duration: const Duration(
-                                                      milliseconds: 180,
-                                                    ),
-                                                    opacity:
-                                                        selected == null ||
-                                                            highlighted
-                                                                .contains(d.id)
-                                                        ? 1
-                                                        : .25,
-                                                    child: Column(
-                                                      children: [
-                                                        Container(
-                                                          width: 72,
-                                                          height: 72,
-                                                          decoration: BoxDecoration(
-                                                            shape:
-                                                                BoxShape.circle,
-                                                            border: Border.all(
-                                                              color:
-                                                                  d.id ==
-                                                                      selected
-                                                                  ? Palette.text
-                                                                  : Palette
-                                                                        .lavender,
-                                                              width:
-                                                                  d.id ==
-                                                                      selected
-                                                                  ? 2
-                                                                  : 1,
-                                                            ),
-                                                            boxShadow: [
-                                                              BoxShadow(
-                                                                color:
-                                                                    moodColor(
-                                                                      d.mood,
-                                                                    ).withValues(
-                                                                      alpha:
-                                                                          .25,
-                                                                    ),
-                                                                blurRadius: 22,
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          child: ClipOval(
-                                                            child: DreamArtwork(
-                                                              d.artwork,
-                                                              radius: 0,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 8,
-                                                        ),
-                                                        SizedBox(
-                                                          width: 108,
-                                                          child: Text(
-                                                            dreamTitle(d, en),
-                                                            maxLines: 2,
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontSize: 12,
-                                                                  height: 1.25,
-                                                                ),
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              if (showReset)
-                                Positioned(
-                                  right: 16,
-                                  top: 16,
-                                  child: DreamSurface(
-                                    padding: const EdgeInsets.all(2),
-                                    glass: true,
-                                    child: IconButton(
-                                      key: const ValueKey('map-reset'),
-                                      tooltip: tr(en, 'Вся карта', 'Fit all'),
-                                      onPressed: fit,
-                                      icon: const Icon(
-                                        CupertinoIcons
-                                            .arrow_up_left_arrow_down_right,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              if (current != null)
-                                Positioned(
-                                  left: 16,
-                                  right: 16,
-                                  bottom: 124,
-                                  child: DreamSurface(
-                                    glass: true,
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                dreamTitle(current, en),
-                                                style: display(21),
-                                              ),
-                                            ),
-                                            IconButton(
-                                              onPressed: () => setState(
-                                                () => selected = null,
-                                              ),
-                                              icon: const Icon(
-                                                CupertinoIcons.xmark,
-                                              ),
-                                              tooltip: tr(
-                                                en,
-                                                'Закрыть',
-                                                'Close',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Text(
-                                          tr(
-                                            en,
-                                            'Связей: ${related.length}',
-                                            'Connections: ${related.length}',
-                                          ),
-                                          style: const TextStyle(fontSize: 13),
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Text(
-                                          related
-                                              .expand((e) => e.reasons)
-                                              .toSet()
-                                              .map(
-                                                (r) => r.startsWith('mood:')
-                                                    ? Mood.values
-                                                          .byName(
-                                                            r.substring(5),
-                                                          )
-                                                          .label(en)
-                                                    : r,
-                                              )
-                                              .join(' · '),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        TextButton(
-                                          onPressed: () => context.push(
-                                            '/dream/${current.id}',
-                                          ),
-                                          child: Text(
-                                            tr(
-                                              en,
-                                              'Открыть сон →',
-                                              'Open Dream →',
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              else
-                                Positioned(
-                                  left: 24,
-                                  right: 24,
-                                  bottom: 135,
-                                  child: Text(
-                                    tr(
-                                      en,
-                                      'Каждый сон — часть чего-то большего',
-                                      'Every dream is part of something bigger',
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Palette.secondary,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
+    }
+    placed[d.id] = candidate;
+  }
+  return placed;
 }
 
 class ConnectionsPainter extends CustomPainter {
@@ -555,21 +88,20 @@ class ConnectionsPainter extends CustomPainter {
         a,
         b,
         Paint()
-          ..color = Palette.lavender.withValues(
-            alpha: selected == null ? .3 : .7,
-          )
-          ..strokeWidth = selected == null ? 1 : 1.5,
+          ..color = Palette.lavender.withValues(alpha: .3)
+          ..strokeWidth = .8,
       );
       canvas.drawCircle(
         Offset.lerp(a, b, .5)!,
-        2,
+        1.5,
         Paint()..color = Palette.lavender.withValues(alpha: .55),
       );
     }
   }
 
   @override
-  bool shouldRepaint(covariant ConnectionsPainter old) => true;
+  bool shouldRepaint(covariant ConnectionsPainter old) =>
+      old.positions != positions || old.edges != edges;
 }
 
 class MapPreview extends StatelessWidget {

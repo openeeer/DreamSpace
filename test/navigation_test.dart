@@ -1,5 +1,5 @@
 import 'package:drift/native.dart';
-import 'package:dreamspace/core/design.dart';
+import 'package:dreamspace/features/dreams/journal_components.dart';
 import 'package:dreamspace/data/database.dart';
 import 'package:dreamspace/data/providers.dart';
 import 'package:dreamspace/data/repository.dart';
@@ -55,18 +55,18 @@ void main() {
     expect(find.text('DreamSpace'), findsOneWidget);
     await tester.tap(find.text('Дневник').last);
     await frame();
-    await tester.longPress(find.byType(DreamCard).first);
+    await tester.longPress(find.byType(DreamJournalCard).first);
     await frame();
     expect(find.byType(CupertinoActionSheet), findsOneWidget);
     await tester.tap(find.text('Убрать из избранного'));
     await frame();
     expect((await tester.runAsync(repo.all))!.first.favorite, isFalse);
     for (final (label, heading) in [
-      ('Дневник', 'Поиск снов, мест, символов'),
+      ('Дневник', 'Поиск снов, мест, символов...'),
       ('Карта', 'Вселенная снов'),
       ('Профиль', 'Мой мир'),
       ('Главная', 'DreamSpace'),
-      ('Дневник', 'Поиск снов, мест, символов'),
+      ('Дневник', 'Поиск снов, мест, символов...'),
     ]) {
       await tester.tap(find.text(label).last);
       await frame();
@@ -76,12 +76,12 @@ void main() {
     await frame();
     await tester.tap(find.byTooltip('Очистить поиск'));
     await frame();
-    expect(find.byType(DreamCard), findsWidgets);
+    expect(find.byType(DreamJournalCard), findsWidgets);
     await tester.tap(find.byTooltip('Записать сон'));
     await frame();
     await tester.tap(find.byTooltip('Закрыть, сохранив черновик'));
     await frame();
-    expect(find.text('Поиск снов, мест, символов'), findsOneWidget);
+    expect(find.text('Поиск снов, мест, символов...'), findsOneWidget);
     await tester.tap(find.byTooltip('Записать сон'));
     await frame();
     await tester.enterText(
@@ -91,7 +91,7 @@ void main() {
     await tester.tap(find.byTooltip('Закрыть, сохранив черновик'));
     await frame();
     await frame();
-    expect(find.text('Поиск снов, мест, символов'), findsOneWidget);
+    expect(find.text('Поиск снов, мест, символов...'), findsOneWidget);
     expect(
       (await tester.runAsync(repo.draft))?.description,
       'Черновик после закрытия',
@@ -104,7 +104,7 @@ void main() {
     await tester.tap(find.text('Удалить'));
     await frame();
     await frame();
-    expect(find.text('Поиск снов, мест, символов'), findsOneWidget);
+    expect(find.text('Поиск снов, мест, символов...'), findsOneWidget);
     expect(await tester.runAsync(repo.draft), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
     router.dispose();
