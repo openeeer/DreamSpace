@@ -51,7 +51,9 @@ final class DreamNativeTabs: NSObject, FlutterPlatformView {
     super.init()
     root.backgroundColor = .clear
     effect.translatesAutoresizingMaskIntoConstraints = false
-    effect.layer.cornerRadius = 31
+    effect.layer.cornerRadius = 34
+    effect.layer.borderWidth = 0.5
+    effect.layer.borderColor = UIColor.white.withAlphaComponent(0.18).cgColor
     effect.layer.cornerCurve = .continuous
     effect.clipsToBounds = true
     root.addSubview(effect)
@@ -77,7 +79,7 @@ final class DreamNativeTabs: NSObject, FlutterPlatformView {
       if #available(iOS 15.0, *) {
       var config = UIButton.Configuration.plain()
       config.image = UIImage(systemName: symbol)
-      config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 20, weight: .medium)
+      config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 25, weight: .medium)
       config.imagePlacement = .top
       config.imagePadding = 3
       config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 1, bottom: 4, trailing: 1)
@@ -142,7 +144,10 @@ final class DreamNativeTabs: NSObject, FlutterPlatformView {
       } else {
         button.setTitle(title, for: .normal)
       }
-      button.backgroundColor = index == selected ? .tertiarySystemFill : .clear
+      button.backgroundColor = index == selected
+        ? UIColor(red: 0.65, green: 0.58, blue: 0.96, alpha: 0.16) : .clear
+      button.layer.borderWidth = index == selected ? 0.7 : 0
+      button.layer.borderColor = UIColor(red: 0.72, green: 0.65, blue: 1, alpha: 0.4).cgColor
       button.accessibilityLabel = title
       button.accessibilityTraits = index == selected ? [.button, .selected] : [.button]
     }

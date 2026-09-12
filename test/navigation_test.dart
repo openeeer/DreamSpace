@@ -47,12 +47,14 @@ void main() {
       ),
     );
     await frame();
-    await tester.tap(find.byType(DreamCard).first);
+    await tester.tap(find.text('Лунная библиотека').first);
     await frame();
     expect(find.byTooltip('Редактировать'), findsOneWidget);
     await tester.tap(find.byIcon(CupertinoIcons.back));
     await frame();
     expect(find.text('DreamSpace'), findsOneWidget);
+    await tester.tap(find.text('Дневник').last);
+    await frame();
     await tester.longPress(find.byType(DreamCard).first);
     await frame();
     expect(find.byType(CupertinoActionSheet), findsOneWidget);

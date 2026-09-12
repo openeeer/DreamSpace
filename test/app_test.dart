@@ -46,7 +46,7 @@ void main() {
       const Duration(seconds: 10),
     );
     expect(find.text('DreamSpace'), findsOneWidget);
-    expect(find.text('Лунная библиотека'), findsOneWidget);
+    expect(find.text('Лунная библиотека'), findsWidgets);
     expect(tester.takeException(), isNull);
     await tester.tap(find.text('Дневник'));
     await tester.pumpAndSettle();

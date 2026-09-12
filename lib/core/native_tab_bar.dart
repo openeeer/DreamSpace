@@ -55,7 +55,7 @@ class _DreamTabBarState extends State<DreamTabBar> {
   Widget build(BuildContext context) {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       return SizedBox(
-        height: 62,
+        height: 76,
         child: UiKitView(
           gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
             Factory<EagerGestureRecognizer>(EagerGestureRecognizer.new),
@@ -82,6 +82,7 @@ class _DreamTabBarState extends State<DreamTabBar> {
       CupertinoIcons.person,
     ];
     return DreamSurface(
+      glass: true,
       radius: 30,
       padding: const EdgeInsets.all(4),
       child: Row(
@@ -95,8 +96,14 @@ class _DreamTabBarState extends State<DreamTabBar> {
                   onPressed: () => widget.onSelected(i),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 7),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
+                      border: widget.index == i
+                          ? Border.all(
+                              color: Palette.lavender.withValues(alpha: .35),
+                              width: .7,
+                            )
+                          : null,
                       color: widget.index == i
                           ? Palette.lavender.withValues(alpha: .16)
                           : null,
@@ -107,7 +114,7 @@ class _DreamTabBarState extends State<DreamTabBar> {
                       children: [
                         Icon(
                           icons[i],
-                          size: 21,
+                          size: 25,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                         const SizedBox(height: 3),
@@ -115,6 +122,7 @@ class _DreamTabBarState extends State<DreamTabBar> {
                           widget.labels[i],
                           textAlign: TextAlign.center,
                           style: TextStyle(
+                            fontFamily: 'Inter',
                             fontSize: 11,
                             color: Theme.of(context).colorScheme.onSurface,
                           ),

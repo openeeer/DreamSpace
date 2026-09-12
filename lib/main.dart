@@ -255,9 +255,9 @@ class DreamShell extends ConsumerWidget {
         children: [
           shell,
           Positioned(
-            left: 18,
-            right: 18,
-            bottom: MediaQuery.paddingOf(context).bottom + 2,
+            left: 22,
+            right: 22,
+            bottom: MediaQuery.viewPaddingOf(context).bottom + 10,
             child: DreamTabBar(
               index: shell.currentIndex,
               labels: labels,
