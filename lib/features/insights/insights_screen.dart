@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../core/design.dart';
+import '../../core/internal_page.dart';
 import '../../models/dream.dart';
 import 'analytics.dart';
 
@@ -30,30 +31,25 @@ class _InsightsScreenState extends State<InsightsScreen> {
       final stats = DreamStats(dreams), totalStats = DreamStats(all);
       final moods = stats.moods.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
-      return DreamPage(
+      return DreamInternalPage(
         title: tr(en, 'Наблюдения', 'Insights'),
         subtitle: tr(
           en,
           'Узоры, которые оставляет ночь',
           'Patterns left behind by the night',
         ),
-        back: true,
         children: [
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final p in [30, 90, 0])
-                DreamChip(
-                  p == 0
-                      ? tr(en, 'Всё время', 'All time')
-                      : '$p ${tr(en, 'дней', 'days')}',
-                  selected: period == p,
-                  onTap: () => setState(() => period = p),
-                ),
-            ],
+          DreamSegmentedControl(
+            value: period,
+            options: {
+              30: tr(en, '30 дней', '30 days'),
+              90: tr(en, '90 дней', '90 days'),
+              0: tr(en, 'Всё время', 'All time'),
+            },
+            onChanged: (v) => setState(() => period = v),
           ),
           const SizedBox(height: 24),
-          DreamSurface(
+          DreamGlassSurface(
             child: Row(
               children: [
                 const Icon(
@@ -77,6 +73,32 @@ class _InsightsScreenState extends State<InsightsScreen> {
             ),
           ),
           const SizedBox(height: 18),
+          if (stats.elements(ElementKind.symbol).isNotEmpty) ...[
+            DreamSettingsSection(
+              children: [
+                DreamSettingsRow(
+                  icon: CupertinoIcons.sparkles,
+                  title: stats.elements(ElementKind.symbol).first.key.name,
+                  subtitle: tr(
+                    en,
+                    'Самый частый образ за выбранный период',
+                    'Most frequent symbol in this period',
+                  ),
+                ),
+                if (moods.isNotEmpty)
+                  DreamSettingsRow(
+                    icon: moodIcon(moods.first.key),
+                    title: moods.first.key.label(en),
+                    subtitle: tr(
+                      en,
+                      'Преобладающее настроение',
+                      'Most frequent mood',
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 18),
+          ],
           Wrap(
             spacing: 12,
             runSpacing: 12,
@@ -100,9 +122,9 @@ class _InsightsScreenState extends State<InsightsScreen> {
           SectionTitle(
             tr(en, 'Активность за 14 дней', 'Activity · last 14 days'),
           ),
-          DreamSurface(
+          DreamGlassSurface(
             child: SizedBox(
-              height: 130,
+              height: 130 + MediaQuery.textScalerOf(context).scale(24),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -170,7 +192,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
           ),
           const SizedBox(height: 28),
           SectionTitle(tr(en, 'Палитра настроений', 'Mood distribution')),
-          DreamSurface(
+          DreamGlassSurface(
             child: Column(
               children: [
                 if (moods.isEmpty)
@@ -227,7 +249,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   ? tr(en, 'Повторяющиеся образы', 'Recurring symbols')
                   : tr(en, 'Знакомые места', 'Familiar places'),
             ),
-            DreamSurface(
+            DreamGlassSurface(
               child: Column(
                 children: [
                   if (stats.elements(kind).isEmpty)
@@ -248,7 +270,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
           ],
           const SizedBox(height: 28),
           SectionTitle(tr(en, 'Темы снов', 'Dream themes')),
-          DreamSurface(
+          DreamGlassSurface(
             child: Column(
               children: [
                 for (final entry in stats.themes.entries)
@@ -295,7 +317,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
   );
   Widget _tile(String title, String value) => SizedBox(
     width: 150,
-    child: DreamSurface(
+    child: DreamGlassSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

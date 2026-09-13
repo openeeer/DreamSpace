@@ -219,7 +219,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                           top: 8,
                           left: 34,
                           child: Icon(
-                              CupertinoIcons.moon_fill,
+                            CupertinoIcons.moon_fill,
                             size: 62,
                             color: Palette.lavender,
                           ),

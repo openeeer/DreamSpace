@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/design.dart';
+import '../../core/internal_page.dart';
 import '../../data/providers.dart';
 import '../../models/dream.dart';
 
@@ -35,6 +36,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
       saved = false,
       restored = false;
   bool closing = false;
+  bool favorite = false;
   int? lucidity, vividness;
   String artwork = artworkIds.first;
   List<DreamElement> elements = [], suggestions = [];
@@ -71,6 +73,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
         type = value.type;
         theme = value.theme;
         recurring = value.recurring;
+        favorite = value.favorite;
         lucidity = value.lucidity;
         vividness = value.vividness;
         artwork = value.artwork;
@@ -111,13 +114,14 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
       vividness: vividness,
       elements: [...elements],
       artwork: artwork,
-      favorite: original?.favorite ?? false,
+      favorite: favorite,
       demo: original?.demo ?? false,
     );
   }
 
   void _changed() {
     if (loading || saved || closing) return;
+    setState(() {});
     debounce?.cancel();
     debounce = Timer(const Duration(milliseconds: 450), _persistDraft);
   }
@@ -175,7 +179,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
       await ref.read(repositoryProvider).clearDraft();
       if (!mounted) return;
       if (ref.read(settingsProvider)['haptics'] != 'false') {
-        HapticFeedback.mediumImpact();
+        HapticFeedback.lightImpact();
       }
       final en = ref.read(englishProvider);
       final completion = Completer<void>();
@@ -183,6 +187,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
         builder: (context) => _SavedMoment(
           en: en,
           artwork: artwork,
+          reduced:
+              ref.read(settingsProvider)['animations'] == 'reduced' ||
+              MediaQuery.disableAnimationsOf(context),
           onComplete: () {
             if (!completion.isCompleted) completion.complete();
           },
@@ -233,409 +240,353 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
   Widget build(BuildContext context) {
     final en = ref.watch(englishProvider);
     if (loading) {
-      return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            tooltip: tr(en, 'Закрыть', 'Close'),
-            icon: const Icon(CupertinoIcons.xmark),
-            onPressed: close,
-          ),
-        ),
-        body: const Center(child: CupertinoActivityIndicator()),
+      return DreamInternalPage(
+        title: tr(en, 'Новый сон', 'New Dream'),
+        onBack: close,
+        children: const [Center(child: CupertinoActivityIndicator())],
       );
     }
     return PopScope(
-      canPop: saved,
+      canPop: !busy,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop && !busy) close();
+        if (didPop && !saved) {
+          debounce?.cancel();
+          _persistDraft();
+        }
       },
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        body: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      tooltip: tr(
+      child: DreamInternalPage(
+        title: widget.id == null
+            ? tr(en, 'Новый сон', 'New Dream')
+            : tr(en, 'Редактировать', 'Edit Dream'),
+        compact: true,
+        onBack: close,
+        backLabel: tr(en, 'Закрыть, сохранив черновик', 'Close and keep draft'),
+        actions: [
+          DreamGlassAction(
+            label: tr(en, 'Удалить черновик', 'Discard draft'),
+            icon: CupertinoIcons.trash,
+            onPressed: busy
+                ? null
+                : () async {
+                    if (!await confirm(
+                      context,
+                      en,
+                      tr(en, 'Удалить черновик?', 'Discard draft?'),
+                      tr(
                         en,
-                        'Закрыть, сохранив черновик',
-                        'Close and keep draft',
+                        'Несохранённый текст будет удалён.',
+                        'Unsaved text will be removed.',
                       ),
-                      onPressed: busy ? null : close,
-                      icon: const Icon(CupertinoIcons.xmark),
-                    ),
-                    Expanded(
-                      child: Text(
-                        widget.id == null
-                            ? tr(en, 'Новый сон', 'New Dream')
-                            : tr(en, 'Редактировать', 'Edit Dream'),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: tr(en, 'Удалить черновик', 'Discard draft'),
-                      icon: const Icon(CupertinoIcons.trash, size: 20),
-                      onPressed: busy
-                          ? null
-                          : () async {
-                              if (!await confirm(
-                                context,
-                                en,
-                                tr(en, 'Удалить черновик?', 'Discard draft?'),
-                                tr(
-                                  en,
-                                  'Несохранённый текст будет удалён.',
-                                  'Unsaved text will be removed.',
-                                ),
-                              )) {
-                                return;
-                              }
-                              debounce?.cancel();
-                              await pending;
-                              await ref.read(repositoryProvider).clearDraft();
-                              if (!mounted) return;
-                              setState(() => saved = true);
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (!mounted) return;
-                                if (context.canPop()) {
-                                  context.pop();
-                                } else {
-                                  context.go('/home');
-                                }
-                              });
-                            },
-                    ),
-                  ],
+                    )) {
+                      return;
+                    }
+                    debounce?.cancel();
+                    await pending;
+                    await ref.read(repositoryProvider).clearDraft();
+                    if (!mounted) return;
+                    setState(() => saved = true);
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/home');
+                      }
+                    });
+                  },
+          ),
+          DreamGlassAction(
+            label: tr(en, 'Готово', 'Done'),
+            prominent: true,
+            onPressed: busy || body.text.trim().isEmpty ? null : _save,
+          ),
+        ],
+        children: [
+          if (restored)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: Text(
+                tr(en, 'Черновик восстановлен', 'Draft restored'),
+                style: const TextStyle(color: Palette.mint, fontSize: 13),
+              ),
+            ),
+          Text(
+            tr(en, 'Что тебе приснилось?', 'What did you dream about?'),
+            style: display(32),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            tr(
+              en,
+              'Начни с любого образа. Остальное вспомнится.',
+              'Start with a single image. The rest will follow.',
+            ),
+            style: const TextStyle(color: Palette.secondary, height: 1.5),
+          ),
+          const SizedBox(height: 24),
+          DreamGlassSurface(
+            child: TextField(
+              controller: body,
+              onTapOutside: (_) => FocusScope.of(context).unfocus(),
+              minLines: 7,
+              maxLines: null,
+              autofocus: false,
+              keyboardAppearance: Theme.of(context).brightness,
+              textCapitalization: TextCapitalization.sentences,
+              style: const TextStyle(fontSize: 17, height: 1.65),
+              decoration: InputDecoration(
+                hintText: tr(en, 'Я помню…', 'I remember…'),
+                alignLabelWithHint: true,
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          CupertinoButton(
+            onPressed: () async {
+              final selected = await dreamDatePicker(
+                context,
+                initial: date,
+                en: en,
+                maximumDate: DateTime.now(),
+              );
+              if (selected != null) change(() => date = selected);
+            },
+            child: Text(formatDate(date, en), textAlign: TextAlign.center),
+          ),
+          const SizedBox(height: 16),
+          SectionTitle(tr(en, 'Как ты себя чувствовал?', 'How did it feel?')),
+          SizedBox(
+            height: 86 + MediaQuery.textScalerOf(context).scale(24),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                for (final m in Mood.values)
+                  MoodOrb(
+                    m,
+                    en: en,
+                    selected: mood == m,
+                    onTap: () {
+                      if (ref.read(settingsProvider)['haptics'] != 'false') {
+                        HapticFeedback.selectionClick();
+                      }
+                      change(() => mood = mood == m ? null : m);
+                    },
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          DreamGlassSurface(
+            padding: EdgeInsets.zero,
+            child: DreamSettingsRow(
+              icon: CupertinoIcons.sparkles,
+              title: tr(en, 'Детали сновидения', 'Dream details'),
+              subtitle: tr(
+                en,
+                'Символы, места, яркость и обложка',
+                'Symbols, places, vividness and cover',
+              ),
+              trailing: Icon(
+                details
+                    ? CupertinoIcons.chevron_up
+                    : CupertinoIcons.chevron_down,
+              ),
+              onTap: () => setState(() => details = !details),
+            ),
+          ),
+          if (details) ...[
+            const SizedBox(height: 22),
+            TextField(
+              controller: title,
+              decoration: InputDecoration(
+                labelText: tr(
+                  en,
+                  'Название (необязательно)',
+                  'Title (optional)',
                 ),
               ),
-              Expanded(
-                child: ListView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
-                  children: [
-                    if (restored)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 18),
-                        child: Text(
-                          tr(en, 'Черновик восстановлен', 'Draft restored'),
-                          style: const TextStyle(
-                            color: Palette.mint,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    Text(
-                      tr(
-                        en,
-                        'Что тебе приснилось?',
-                        'What did you dream about?',
-                      ),
-                      style: display(32),
+            ),
+            const SizedBox(height: 24),
+            SectionTitle(tr(en, 'Тип сна', 'Dream type')),
+            DreamSegmentedControl(
+              value: type,
+              options: {for (final t in DreamType.values) t: t.label(en)},
+              onChanged: (v) => change(() => type = v),
+            ),
+            DreamSettingsRow(
+              icon: CupertinoIcons.repeat,
+              title: tr(en, 'Повторяющийся сон', 'Recurring dream'),
+              trailing: DreamGlassSwitch(
+                label: tr(en, 'Повторяющийся сон', 'Recurring dream'),
+                value: recurring,
+                onChanged: (v) => change(() => recurring = v),
+              ),
+            ),
+            DreamSettingsRow(
+              icon: CupertinoIcons.heart,
+              title: tr(en, 'В избранное', 'Favorite'),
+              trailing: DreamGlassSwitch(
+                label: tr(en, 'В избранное', 'Favorite'),
+                value: favorite,
+                onChanged: (v) => change(() => favorite = v),
+              ),
+            ),
+            _intensity(
+              tr(en, 'Осознанность', 'Lucidity'),
+              lucidity,
+              (v) => change(() => lucidity = v),
+              en,
+            ),
+            _intensity(
+              tr(en, 'Яркость', 'Vividness'),
+              vividness,
+              (v) => change(() => vividness = v),
+              en,
+            ),
+            const SizedBox(height: 20),
+            SectionTitle(tr(en, 'Тема', 'Theme')),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final t in DreamTheme.values)
+                  DreamChip(
+                    t.label(en),
+                    selected: theme == t,
+                    onTap: () => change(() => theme = theme == t ? null : t),
+                  ),
+              ],
+            ),
+            for (final kind in ElementKind.values) ...[
+              const SizedBox(height: 26),
+              SectionTitle(switch (kind) {
+                ElementKind.symbol => tr(en, 'Символы', 'Symbols'),
+                ElementKind.character => tr(en, 'Персонажи', 'Characters'),
+                ElementKind.place => tr(en, 'Места', 'Places'),
+              }),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final e in elements.where((e) => e.kind == kind))
+                    DreamChip(
+                      '${e.name} ×',
+                      selected: true,
+                      onTap: () => change(() => elements.remove(e)),
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      tr(
-                        en,
-                        'Начни с любого образа. Остальное вспомнится.',
-                        'Start with a single image. The rest will follow.',
-                      ),
-                      style: const TextStyle(
-                        color: Palette.secondary,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: body,
-                      onTapOutside: (_) => FocusScope.of(context).unfocus(),
-                      minLines: 7,
-                      maxLines: null,
-                      autofocus: widget.id == null && !restored,
-                      textCapitalization: TextCapitalization.sentences,
-                      style: const TextStyle(fontSize: 17, height: 1.65),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: entityControllers[kind],
+                      onSubmitted: (value) => addElement(value, kind),
                       decoration: InputDecoration(
-                        hintText: tr(en, 'Я помню…', 'I remember…'),
-                        alignLabelWithHint: true,
+                        hintText: tr(
+                          en,
+                          'Добавить свой вариант',
+                          'Add your own',
+                        ),
+                        isDense: true,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    TextButton.icon(
-                      onPressed: () async {
-                        final selected = await showDatePicker(
-                          context: context,
-                          initialDate: date,
-                          firstDate: DateTime(1900),
-                          lastDate: DateTime.now(),
-                        );
-                        if (selected != null) change(() => date = selected);
-                      },
-                      icon: const Icon(CupertinoIcons.calendar, size: 18),
-                      label: Text(formatDate(date, en)),
-                    ),
-                    const SizedBox(height: 16),
-                    SectionTitle(
-                      tr(en, 'Как ты себя чувствовал?', 'How did it feel?'),
-                    ),
-                    SizedBox(
-                      height: 110,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          for (final m in Mood.values)
-                            MoodOrb(
-                              m,
-                              en: en,
-                              selected: mood == m,
-                              onTap: () {
-                                if (ref.read(settingsProvider)['haptics'] !=
-                                    'false') {
-                                  HapticFeedback.selectionClick();
-                                }
-                                change(() => mood = mood == m ? null : m);
-                              },
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    DreamSurface(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      child: ListTile(
-                        title: Text(
-                          tr(en, 'Детали сновидения', 'Dream details'),
-                        ),
-                        subtitle: Text(
-                          tr(
-                            en,
-                            'Символы, места, яркость и обложка',
-                            'Symbols, places, vividness and cover',
-                          ),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        trailing: Icon(
-                          details
-                              ? CupertinoIcons.chevron_up
-                              : CupertinoIcons.chevron_down,
-                        ),
-                        onTap: () => setState(() => details = !details),
-                      ),
-                    ),
-                    if (details) ...[
-                      const SizedBox(height: 22),
-                      TextField(
-                        controller: title,
-                        decoration: InputDecoration(
-                          labelText: tr(
-                            en,
-                            'Название (необязательно)',
-                            'Title (optional)',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      SectionTitle(tr(en, 'Тип сна', 'Dream type')),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final t in DreamType.values)
-                            DreamChip(
-                              t.label(en),
-                              selected: type == t,
-                              onTap: () => change(() => type = t),
-                            ),
-                        ],
-                      ),
-                      SwitchListTile.adaptive(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(
-                          tr(en, 'Повторяющийся сон', 'Recurring dream'),
-                        ),
-                        value: recurring,
-                        onChanged: (v) => change(() => recurring = v),
-                      ),
-                      _intensity(
-                        tr(en, 'Осознанность', 'Lucidity'),
-                        lucidity,
-                        (v) => change(() => lucidity = v),
-                        en,
-                      ),
-                      _intensity(
-                        tr(en, 'Яркость', 'Vividness'),
-                        vividness,
-                        (v) => change(() => vividness = v),
-                        en,
-                      ),
-                      const SizedBox(height: 20),
-                      SectionTitle(tr(en, 'Тема', 'Theme')),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          for (final t in DreamTheme.values)
-                            DreamChip(
-                              t.label(en),
-                              selected: theme == t,
-                              onTap: () =>
-                                  change(() => theme = theme == t ? null : t),
-                            ),
-                        ],
-                      ),
-                      for (final kind in ElementKind.values) ...[
-                        const SizedBox(height: 26),
-                        SectionTitle(switch (kind) {
-                          ElementKind.symbol => tr(en, 'Символы', 'Symbols'),
-                          ElementKind.character => tr(
-                            en,
-                            'Персонажи',
-                            'Characters',
-                          ),
-                          ElementKind.place => tr(en, 'Места', 'Places'),
-                        }),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            for (final e in elements.where(
-                              (e) => e.kind == kind,
-                            ))
-                              DreamChip(
-                                '${e.name} ×',
-                                selected: true,
-                                onTap: () => change(() => elements.remove(e)),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: entityControllers[kind],
-                                onSubmitted: (value) => addElement(value, kind),
-                                decoration: InputDecoration(
-                                  hintText: tr(
-                                    en,
-                                    'Добавить свой вариант',
-                                    'Add your own',
-                                  ),
-                                  isDense: true,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => addElement(
-                                entityControllers[kind]!.text,
-                                kind,
-                              ),
-                              icon: const Icon(CupertinoIcons.add_circled),
-                              tooltip: tr(en, 'Добавить', 'Add'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: [
-                            for (final e
-                                in suggestions
-                                    .where(
-                                      (e) =>
-                                          e.kind == kind &&
-                                          !elements.any((a) => a.id == e.id),
-                                    )
-                                    .take(8))
-                              DreamChip(
-                                e.name,
-                                onTap: () => change(() => elements.add(e)),
-                              ),
-                          ],
-                        ),
-                      ],
-                      const SizedBox(height: 28),
-                      SectionTitle(tr(en, 'Обложка сна', 'Dream cover')),
-                      SizedBox(
-                        height: 100,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            for (final a in artworkIds)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 10),
-                                child: Semantics(
-                                  button: true,
-                                  selected: artwork == a,
-                                  label: a.replaceAll('_', ' '),
-                                  child: GestureDetector(
-                                    onTap: () => change(() => artwork = a),
-                                    child: Container(
-                                      width: 100,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        border: Border.all(
-                                          color: artwork == a
-                                              ? Palette.lavender
-                                              : Colors.transparent,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: DreamArtwork(a, radius: 18),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    if (error != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 18),
-                        child: Text(
-                          error == 'empty'
-                              ? tr(
-                                  en,
-                                  'Добавь хотя бы несколько слов о сне.',
-                                  'Write a few words about your dream.',
-                                )
-                              : tr(
-                                  en,
-                                  'Не удалось сохранить. Текст остался здесь — попробуй ещё раз.',
-                                  'Could not save. Your text is still here — please retry.',
-                                ),
-                          style: const TextStyle(color: Color(0xfff29ba9)),
-                        ),
-                      ),
-                  ],
-                ),
+                  ),
+                  IconButton(
+                    onPressed: () =>
+                        addElement(entityControllers[kind]!.text, kind),
+                    icon: const Icon(CupertinoIcons.add_circled),
+                    tooltip: tr(en, 'Добавить', 'Add'),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
-                child: DreamButton(
-                  label: tr(en, 'Сохранить сон', 'Save Dream'),
-                  icon: CupertinoIcons.sparkles,
-                  busy: busy,
-                  onPressed: _save,
-                ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final e
+                      in suggestions
+                          .where(
+                            (e) =>
+                                e.kind == kind &&
+                                !elements.any((a) => a.id == e.id),
+                          )
+                          .take(8))
+                    DreamChip(
+                      e.name,
+                      onTap: () => change(() => elements.add(e)),
+                    ),
+                ],
               ),
             ],
+            const SizedBox(height: 28),
+            SectionTitle(tr(en, 'Обложка сна', 'Dream cover')),
+            SizedBox(
+              height: 100,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  for (final a in artworkIds)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: Semantics(
+                        button: true,
+                        selected: artwork == a,
+                        label: a.replaceAll('_', ' '),
+                        child: GestureDetector(
+                          onTap: () => change(() => artwork = a),
+                          child: Container(
+                            width: 100,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: artwork == a
+                                    ? Palette.lavender
+                                    : Colors.transparent,
+                                width: 2,
+                              ),
+                            ),
+                            child: DreamArtwork(a, radius: 18),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 18),
+              child: Text(
+                error == 'empty'
+                    ? tr(
+                        en,
+                        'Добавь хотя бы несколько слов о сне.',
+                        'Write a few words about your dream.',
+                      )
+                    : tr(
+                        en,
+                        'Не удалось сохранить. Текст остался здесь — попробуй ещё раз.',
+                        'Could not save. Your text is still here — please retry.',
+                      ),
+                style: const TextStyle(color: Color(0xfff29ba9)),
+              ),
+            ),
+          const SizedBox(height: 24),
+          DreamButton(
+            label: tr(en, 'Сохранить сон', 'Save Dream'),
+            icon: CupertinoIcons.sparkles,
+            busy: busy,
+            onPressed: body.text.trim().isEmpty ? null : _save,
           ),
-        ),
+        ],
       ),
     );
   }
@@ -676,11 +627,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
             ),
         ],
       ),
-      Slider(
+      CupertinoSlider(
         value: (value ?? 0).toDouble(),
         max: 100,
         divisions: 20,
-        label: '${value ?? 0}%',
+        activeColor: Palette.lavender,
         onChanged: (v) => onChanged(v.round()),
       ),
     ],
@@ -691,10 +642,12 @@ class _SavedMoment extends StatefulWidget {
   const _SavedMoment({
     required this.en,
     required this.artwork,
+    required this.reduced,
     required this.onComplete,
   });
   final VoidCallback onComplete;
   final bool en;
+  final bool reduced;
   final String artwork;
   @override
   State<_SavedMoment> createState() => _SavedMomentState();
@@ -705,7 +658,7 @@ class _SavedMomentState extends State<_SavedMoment> {
   @override
   void initState() {
     super.initState();
-    timer = Timer(const Duration(milliseconds: 900), () {
+    timer = Timer(const Duration(milliseconds: 450), () {
       if (mounted) widget.onComplete();
     });
   }
@@ -724,11 +677,8 @@ class _SavedMomentState extends State<_SavedMoment> {
         mainAxisSize: MainAxisSize.min,
         children: [
           TweenAnimationBuilder<double>(
-            tween: Tween(
-              begin: MediaQuery.disableAnimationsOf(context) ? 1 : .75,
-              end: 1,
-            ),
-            duration: const Duration(milliseconds: 500),
+            tween: Tween(begin: widget.reduced ? 1 : .9, end: 1),
+            duration: Duration(milliseconds: widget.reduced ? 0 : 400),
             builder: (context, value, child) =>
                 Transform.scale(scale: value, child: child),
             child: Container(

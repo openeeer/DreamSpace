@@ -1,17 +1,19 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../core/design.dart';
+import '../../core/internal_page.dart';
 import '../../models/dream.dart';
 
-class CalendarScreen extends StatefulWidget {
+class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({super.key});
   @override
-  State<CalendarScreen> createState() => _CalendarScreenState();
+  ConsumerState<CalendarScreen> createState() => _CalendarScreenState();
 }
 
-class _CalendarScreenState extends State<CalendarScreen> {
+class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   DateTime month = DateTime(DateTime.now().year, DateTime.now().month),
       selected = DateTime.now();
   @override
@@ -22,35 +24,40 @@ class _CalendarScreenState extends State<CalendarScreen> {
       final entries = dreams
           .where((d) => dateKey(d.date) == dateKey(selected))
           .toList();
-      return DreamPage(
+      return DreamInternalPage(
         title: tr(en, 'Календарь', 'Calendar'),
-        back: true,
+        subtitle: tr(
+          en,
+          'Каждая ночь — часть твоей истории',
+          'Every night is part of your story',
+        ),
         children: [
-          DreamSurface(
+          DreamGlassSurface(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 16),
             child: Column(
               children: [
                 Row(
                   children: [
-                    IconButton(
-                      tooltip: tr(en, 'Предыдущий месяц', 'Previous month'),
+                    DreamGlassAction(
+                      label: tr(en, 'Предыдущий месяц', 'Previous month'),
                       onPressed: () => setState(
                         () => month = DateTime(month.year, month.month - 1),
                       ),
-                      icon: const Icon(CupertinoIcons.chevron_left),
+                      icon: CupertinoIcons.chevron_left,
                     ),
                     Expanded(
                       child: Text(
-                        DateFormat.yMMMM(en ? 'en' : 'ru').format(month),
+                        DateFormat('LLLL yyyy', en ? 'en' : 'ru').format(month),
                         textAlign: TextAlign.center,
                         style: display(22),
                       ),
                     ),
-                    IconButton(
-                      tooltip: tr(en, 'Следующий месяц', 'Next month'),
+                    DreamGlassAction(
+                      label: tr(en, 'Следующий месяц', 'Next month'),
                       onPressed: () => setState(
                         () => month = DateTime(month.year, month.month + 1),
                       ),
-                      icon: const Icon(CupertinoIcons.chevron_right),
+                      icon: CupertinoIcons.chevron_right,
                     ),
                   ],
                 ),
@@ -78,9 +85,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: ((days + offset) / 7).ceil() * 7,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 7,
-                    mainAxisExtent: 53,
+                    mainAxisExtent:
+                        44 + MediaQuery.textScalerOf(context).scale(16),
                   ),
                   itemBuilder: (context, i) {
                     final day = i - offset + 1;
@@ -100,10 +108,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       label: '${formatDate(date, en)}, ${items.length}',
                       selected: dateKey(date) == dateKey(selected),
                       child: GestureDetector(
-                        onTap: () => setState(() => selected = date),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          dreamSelection(ref);
+                          setState(() => selected = date);
+                        },
                         child: Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15),
+                            borderRadius: BorderRadius.circular(24),
+                            border: dateKey(date) == dateKey(selected)
+                                ? Border.all(
+                                    color: InternalStyle.accent(
+                                      context,
+                                    ).withValues(alpha: .65),
+                                  )
+                                : null,
                             color: dateKey(date) == dateKey(selected)
                                 ? Palette.lavender.withValues(alpha: .23)
                                 : null,

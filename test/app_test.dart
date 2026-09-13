@@ -114,7 +114,8 @@ void main() {
       find.byType(TextField).first,
       'Тестовый сон: я видел лунное море.',
     );
-    await tester.runAsync(() => tester.tap(find.text('Сохранить сон')));
+    await tester.pump();
+    await tester.runAsync(() => tester.tap(find.text('Готово')));
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 100)),
     );

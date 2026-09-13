@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/design.dart';
+import '../../core/internal_page.dart';
 import '../../data/providers.dart';
 import '../../models/dream.dart';
 import '../insights/analytics.dart';
@@ -23,38 +24,37 @@ class _ElementsScreenState extends State<ElementsScreen> {
           .elements(kind)
           .where((e) => normalize(e.key.name).contains(normalize(query)))
           .toList();
-      return DreamPage(
+      return DreamInternalPage(
         title: tr(en, 'Образы снов', 'Dream Elements'),
         subtitle: tr(
           en,
-          'То, что возвращается к тебе',
-          'The things that keep returning',
+          'Символы, места и люди, которые возвращаются в твоих снах',
+          'Symbols, places and people that return in your dreams',
         ),
-        back: true,
         children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final k in ElementKind.values)
-                DreamChip(
-                  switch (k) {
-                    ElementKind.symbol => tr(en, 'Символы', 'Symbols'),
-                    ElementKind.character => tr(en, 'Люди', 'People'),
-                    ElementKind.place => tr(en, 'Места', 'Places'),
-                  },
-                  selected: kind == k,
-                  onTap: () => setState(() => kind = k),
-                ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          TextField(
-            onChanged: (v) => setState(() => query = v),
-            decoration: InputDecoration(
-              hintText: tr(en, 'Найти образ', 'Find an element'),
-              prefixIcon: const Icon(CupertinoIcons.search),
+          DreamGlassSurface(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: TextField(
+              onChanged: (v) => setState(() => query = v),
+              decoration: InputDecoration(
+                hintText: tr(en, 'Найти образ', 'Find an element'),
+                prefixIcon: const Icon(CupertinoIcons.search),
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+              ),
             ),
+          ),
+          const SizedBox(height: 16),
+          DreamSegmentedControl(
+            value: kind,
+            options: {
+              ElementKind.symbol: tr(en, 'Символы', 'Symbols'),
+              ElementKind.place: tr(en, 'Места', 'Places'),
+              ElementKind.character: tr(en, 'Люди', 'People'),
+            },
+            onChanged: (v) => setState(() => kind = v),
           ),
           const SizedBox(height: 22),
           if (items.isEmpty)
@@ -75,7 +75,7 @@ class _ElementsScreenState extends State<ElementsScreen> {
                     width: c.maxWidth < 350
                         ? c.maxWidth
                         : (c.maxWidth - 12) / 2,
-                    child: DreamSurface(
+                    child: DreamGlassSurface(
                       onTap: () => context.push(
                         '/elements/${Uri.encodeComponent(item.key.id)}',
                       ),
@@ -108,6 +108,30 @@ class _ElementsScreenState extends State<ElementsScreen> {
                               color: Palette.secondary,
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          Text(
+                            dreams
+                                .where(
+                                  (d) => d.elements.any(
+                                    (e) => e.id == item.key.id,
+                                  ),
+                                )
+                                .expand((d) => d.elements)
+                                .where((e) => e.id != item.key.id)
+                                .map((e) => e.name)
+                                .toSet()
+                                .take(3)
+                                .join(' · '),
+                            style: TextStyle(
+                              fontSize: 12,
+                              height: 1.4,
+                              color: InternalStyle.muted(context),
+                            ),
+                          ),
+                          const Align(
+                            alignment: Alignment.centerRight,
+                            child: Icon(CupertinoIcons.chevron_right, size: 16),
+                          ),
                         ],
                       ),
                     ),
@@ -135,9 +159,8 @@ class ElementDetailScreen extends ConsumerWidget {
           .where((e) => e.id == id)
           .firstOrNull;
       if (element == null) {
-        return DreamPage(
+        return DreamInternalPage(
           title: tr(en, 'Образ не найден', 'Element not found'),
-          back: true,
           children: const [],
         );
       }
@@ -149,13 +172,12 @@ class ElementDetailScreen extends ConsumerWidget {
           .where((e) => e.id != id)
           .map((e) => e.name)
           .toSet();
-      return DreamPage(
+      return DreamInternalPage(
         title: element.name,
-        back: true,
         actions: [
-          IconButton(
-            tooltip: tr(en, 'Переименовать', 'Rename'),
-            icon: const Icon(CupertinoIcons.pencil),
+          DreamGlassAction(
+            label: tr(en, 'Переименовать', 'Rename'),
+            icon: CupertinoIcons.pencil,
             onPressed: () async {
               final controller = TextEditingController(text: element.name);
               final name = await showCupertinoDialog<String>(
@@ -231,7 +253,7 @@ class ElementDetailScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
-          DreamSurface(
+          DreamGlassSurface(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

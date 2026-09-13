@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/design.dart';
+import '../../core/internal_page.dart';
 import '../../data/providers.dart';
 import '../../models/dream.dart';
 
@@ -14,39 +16,55 @@ class DetailScreen extends ConsumerWidget {
     builder: (dreams, en) {
       final dream = dreams.where((d) => d.id == id).firstOrNull;
       if (dream == null) {
-        return DreamPage(
+        return DreamInternalPage(
           title: tr(en, 'Сон не найден', 'Dream not found'),
-          back: true,
           children: const [],
         );
       }
-      return DreamPage(
-        title: dreamTitle(dream, en),
-        back: true,
+      return DreamInternalPage(
+        title: tr(en, 'Сон', 'Dream'),
+        compact: true,
+        hero: SizedBox(
+          height: 290,
+          child: ShaderMask(
+            blendMode: BlendMode.dstIn,
+            shaderCallback: (r) => const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.white, Colors.white, Colors.transparent],
+              stops: [0, .65, 1],
+            ).createShader(r),
+            child: DreamArtwork(dream.artwork, radius: 0),
+          ),
+        ),
         actions: [
-          IconButton(
-            tooltip: tr(en, 'Избранное', 'Favorite'),
+          DreamGlassAction(
+            label: tr(en, 'Избранное', 'Favorite'),
             onPressed: () => ref
                 .read(repositoryProvider)
                 .save(dream.copyWith(favorite: !dream.favorite)),
-            icon: Icon(
-              dream.favorite ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
-              color: Palette.lavender,
-            ),
+            icon: dream.favorite
+                ? CupertinoIcons.heart_fill
+                : CupertinoIcons.heart,
           ),
-          IconButton(
-            tooltip: tr(en, 'Редактировать', 'Edit'),
+          DreamGlassAction(
+            label: tr(en, 'Редактировать', 'Edit'),
             onPressed: () => context.push('/record?id=$id'),
-            icon: const Icon(CupertinoIcons.pencil),
+            icon: CupertinoIcons.pencil,
+          ),
+          DreamGlassAction(
+            label: tr(en, 'Действия со сном', 'Dream actions'),
+            icon: CupertinoIcons.ellipsis,
+            onPressed: () => actions(context, ref, dream, en),
           ),
         ],
         children: [
-          SizedBox(height: 220, child: DreamArtwork(dream.artwork)),
-          const SizedBox(height: 16),
           Text(
             formatDate(dream.date, en),
             style: const TextStyle(color: Palette.secondary),
           ),
+          const SizedBox(height: 18),
+          Text(dreamTitle(dream, en), style: display(34)),
           const SizedBox(height: 18),
           Wrap(
             spacing: 8,
@@ -61,7 +79,7 @@ class DetailScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 26),
-          DreamSurface(
+          DreamGlassSurface(
             child: SelectableText(
               dream.description,
               style: const TextStyle(fontSize: 17, height: 1.55),
@@ -90,7 +108,7 @@ class DetailScreen extends ConsumerWidget {
               ),
             ],
           const SizedBox(height: 24),
-          DreamSurface(
+          DreamGlassSurface(
             child: Column(
               children: [
                 _level(tr(en, 'Осознанность', 'Lucidity'), dream.lucidity, en),
@@ -115,33 +133,67 @@ class DetailScreen extends ConsumerWidget {
             icon: CupertinoIcons.sparkles,
             onPressed: () => context.go('/map?focus=$id'),
           ),
-          const SizedBox(height: 20),
-          TextButton(
-            onPressed: () async {
-              if (!await confirm(
-                context,
-                en,
-                tr(en, 'Удалить этот сон?', 'Delete this dream?'),
-                tr(
-                  en,
-                  'Запись и её связи будут удалены.',
-                  'This entry and its connections will be removed.',
-                ),
-              )) {
-                return;
-              }
-              await ref.read(repositoryProvider).delete(id);
-              if (context.mounted) context.pop();
-            },
-            child: Text(
-              tr(en, 'Удалить сон', 'Delete Dream'),
-              style: const TextStyle(color: Color(0xfff29ba9)),
-            ),
-          ),
         ],
       );
     },
   );
+  Future<void> actions(
+    BuildContext context,
+    WidgetRef ref,
+    Dream dream,
+    bool en,
+  ) async {
+    final action = await showCupertinoModalPopup<String>(
+      context: context,
+      builder: (ctx) => CupertinoActionSheet(
+        title: Text(dreamTitle(dream, en)),
+        actions: [
+          for (final (value, title) in [
+            ('edit', tr(en, 'Редактировать', 'Edit')),
+            ('share', tr(en, 'Поделиться', 'Share')),
+            ('delete', tr(en, 'Удалить сон', 'Delete Dream')),
+          ])
+            CupertinoActionSheetAction(
+              isDestructiveAction: value == 'delete',
+              onPressed: () => Navigator.pop(ctx, value),
+              child: Text(title),
+            ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text(tr(en, 'Отмена', 'Cancel')),
+        ),
+      ),
+    );
+    if (!context.mounted || action == null) return;
+    if (action == 'edit') context.push('/record?id=$id');
+    if (action == 'share') {
+      final box = context.findRenderObject() as RenderBox;
+      await SharePlus.instance.share(
+        ShareParams(
+          text:
+              '${dreamTitle(dream, en)}\n${formatDate(dream.date, en)}\n\n${dream.description}',
+          sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size,
+        ),
+      );
+    }
+    if (context.mounted &&
+        action == 'delete' &&
+        await confirm(
+          context,
+          en,
+          tr(en, 'Удалить этот сон?', 'Delete this dream?'),
+          tr(
+            en,
+            'Запись и её связи будут удалены.',
+            'This entry and its connections will be removed.',
+          ),
+        )) {
+      await ref.read(repositoryProvider).delete(id);
+      if (context.mounted) context.pop();
+    }
+  }
+
   Widget _level(String label, int? value, bool en) => Column(
     children: [
       Row(

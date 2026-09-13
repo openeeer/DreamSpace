@@ -26,6 +26,7 @@ import 'features/onboarding/onboarding_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   LicenseRegistry.addLicense(() async* {
     for (final font in ['Lora', 'Inter']) {
       yield LicenseEntryWithLineBreaks([
