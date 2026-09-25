@@ -197,6 +197,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             SizedBox(
                               height: cardHeight,
                               child: PageView.builder(
+                                key: const PageStorageKey<String>(
+                                  'home-carousel',
+                                ),
                                 controller: pages,
                                 itemCount: featured.length,
                                 onPageChanged: (value) =>
@@ -291,6 +294,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                                 const SizedBox(height: 12),
                                 SingleChildScrollView(
+                                  key: const PageStorageKey<String>(
+                                    'home-moods',
+                                  ),
                                   scrollDirection: Axis.horizontal,
                                   child: Row(
                                     crossAxisAlignment:
