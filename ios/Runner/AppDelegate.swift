@@ -288,8 +288,11 @@ final class DreamFiltersController: DreamSheetController {
     title = english ? "Journal options" : "Параметры дневника"
     moodLabels = configuration["moods"] as? [String] ?? []
     categoryLabels = configuration["categories"] as? [String] ?? []
-    for (index, text) in (english ? ["Newest first", "Oldest first"] : ["Сначала новые", "Сначала старые"]).enumerated() {
-      sort.insertSegment(withTitle: text, at: index, animated: false)
+    let sortTitles: [String] = english
+      ? ["Newest first", "Oldest first"]
+      : ["Сначала новые", "Сначала старые"]
+    for index in sortTitles.indices {
+      sort.insertSegment(withTitle: sortTitles[index], at: index, animated: false)
     }
     sort.selectedSegmentIndex = (configuration["oldest"] as? Bool ?? false) ? 1 : 0
     for picker in [moods, categories] { picker.dataSource = self; picker.delegate = self }
@@ -652,8 +655,9 @@ final class DreamNativeGlass: NSObject, FlutterPlatformView {
       slider.accessibilityLabel = label
     default:
       let radius = CGFloat((config["radius"] as? NSNumber)?.doubleValue ?? 24)
-      if #available(iOS 26.0, *) { effect.cornerConfiguration = .fixed(radius) }
-      else {
+      if #available(iOS 26.0, *) {
+        effect.cornerConfiguration = .corners(radius: .fixed(Double(radius)))
+      } else {
         effect.layer.cornerRadius = radius
         effect.layer.cornerCurve = .continuous
         effect.clipsToBounds = true
