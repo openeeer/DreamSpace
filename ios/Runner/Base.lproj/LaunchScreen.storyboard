@@ -25,9 +25,9 @@
                             <constraint firstItem="launch-background" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="background-top" />
                             <constraint firstItem="launch-background" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" id="background-bottom" />
                             <constraint firstItem="launch-moon" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="moon-centerX" />
-                            <constraint firstItem="launch-moon" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="moon-centerY" />
-                            <constraint firstItem="launch-moon" firstAttribute="width" constant="76" id="moon-width" />
-                            <constraint firstItem="launch-moon" firstAttribute="height" constant="76" id="moon-height" />
+                            <constraint firstItem="launch-moon" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" constant="40" id="moon-centerY" />
+                            <constraint firstItem="launch-moon" firstAttribute="width" constant="280" id="moon-width" />
+                            <constraint firstItem="launch-moon" firstAttribute="height" constant="260" id="moon-height" />
                         </constraints>
                     </view>
                 </viewController>
@@ -38,6 +38,6 @@
     </scenes>
     <resources>
         <image name="LaunchBackground" width="1024" height="1536" />
-        <image name="LaunchMoon" width="76" height="76" />
+        <image name="LaunchMoon" width="280" height="260" />
     </resources>
 </document>

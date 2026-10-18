@@ -325,23 +325,179 @@ class LaunchArtwork extends StatelessWidget {
           errorBuilder: (_, error, stack) => const SizedBox.expand(),
         ),
         Center(
-          child: Semantics(
-            label: 'DreamSpace',
-            textDirection: TextDirection.ltr,
-            child: RepaintBoundary(
-              child: CustomPaint(
-                size: const Size(76, 76),
-                painter: CrescentFillPainter(
-                  progress,
-                  reducedMotion: reducedMotion,
-                ),
-              ),
+          child: Transform.translate(
+            offset: const Offset(0, 40),
+            child: LaunchEmblem(
+              progress: progress,
+              reducedMotion: reducedMotion,
             ),
           ),
         ),
       ],
     ),
   );
+}
+
+/// Fixed brand artwork, shared with the native launch image. Its text is part of
+/// the mark; app content continues to respect the user's preferred text size.
+class LaunchEmblem extends StatelessWidget {
+  const LaunchEmblem({
+    super.key,
+    required this.progress,
+    this.reducedMotion = false,
+  });
+  final Animation<double> progress;
+  final bool reducedMotion;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: 'Dream Space',
+    textDirection: TextDirection.ltr,
+    child: ExcludeSemantics(
+      child: RepaintBoundary(
+        child: SizedBox(
+          width: 280,
+          height: 260,
+          child: Stack(
+            alignment: Alignment.topLeft,
+            children: [
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _LaunchOrbitPainter(progress, reducedMotion),
+                ),
+              ),
+              Positioned(
+                left: 102,
+                top: 52,
+                width: 76,
+                height: 76,
+                child: CustomPaint(
+                  painter: CrescentFillPainter(
+                    progress,
+                    reducedMotion: reducedMotion,
+                  ),
+                ),
+              ),
+              const Positioned(
+                left: 0,
+                right: 0,
+                top: 150,
+                child: Text(
+                  'Dream Space',
+                  textDirection: TextDirection.ltr,
+                  textAlign: TextAlign.center,
+                  textScaler: TextScaler.noScaling,
+                  style: TextStyle(
+                    fontFamily: 'Lora',
+                    fontSize: 28,
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 1,
+                    height: 1.25,
+                    color: Color(0xffeee8fc),
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _LaunchOrbitPainter extends CustomPainter {
+  _LaunchOrbitPainter(this.progress, this.reducedMotion)
+    : super(repaint: progress);
+  final Animation<double> progress;
+  final bool reducedMotion;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const center = Offset(140, 90);
+    const lavender = Color(0xffc0acff);
+    final phase = Curves.easeInOutCubic.transform(progress.value);
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(-.38);
+    final orbit = Rect.fromCenter(center: Offset.zero, width: 182, height: 108);
+    canvas.drawOval(
+      orbit,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = .65
+        ..color = lavender.withValues(alpha: .17),
+    );
+    if (!reducedMotion && phase > 0) {
+      final angle = -.9 + phase * 1.8;
+      canvas.drawArc(
+        orbit,
+        angle - .45,
+        .45,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..shader = ui.Gradient.sweep(
+            Offset.zero,
+            [lavender.withValues(alpha: 0), lavender.withValues(alpha: .6)],
+            null,
+            TileMode.clamp,
+            angle - .45,
+            angle,
+          ),
+      );
+      final point = Offset(91 * math.cos(angle), 54 * math.sin(angle));
+      canvas.drawCircle(
+        point,
+        5,
+        Paint()
+          ..color = lavender.withValues(alpha: .4)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+      );
+      canvas.drawCircle(point, 1.5, Paint()..color = const Color(0xfff5eddf));
+    }
+    canvas.restore();
+
+    for (final star in const [
+      (Offset(213, 44), 3.4),
+      (Offset(65, 119), 2.5),
+      (Offset(89, 30), 1.7),
+    ]) {
+      final paint = Paint()
+        ..color = lavender.withValues(alpha: .45 + .15 * phase)
+        ..strokeWidth = .8
+        ..strokeCap = StrokeCap.round;
+      canvas.drawLine(
+        star.$1.translate(-star.$2, 0),
+        star.$1.translate(star.$2, 0),
+        paint,
+      );
+      canvas.drawLine(
+        star.$1.translate(0, -star.$2),
+        star.$1.translate(0, star.$2),
+        paint,
+      );
+    }
+    final ink = Paint()
+      ..strokeWidth = .65
+      ..color = lavender.withValues(alpha: .28);
+    canvas.drawLine(const Offset(106, 210), const Offset(128, 210), ink);
+    canvas.drawLine(const Offset(152, 210), const Offset(174, 210), ink);
+    canvas.drawPath(
+      Path()
+        ..moveTo(140, 207)
+        ..lineTo(143, 210)
+        ..lineTo(140, 213)
+        ..lineTo(137, 210)
+        ..close(),
+      Paint()..color = lavender.withValues(alpha: .4 + .3 * phase),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _LaunchOrbitPainter old) =>
+      old.progress != progress || old.reducedMotion != reducedMotion;
 }
 
 /// Small, stable silhouette shared with the static iOS launch image.

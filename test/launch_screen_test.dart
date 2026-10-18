@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:dreamspace/core/launch_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _Haptics implements LaunchHaptics {
@@ -187,6 +188,11 @@ void main() {
     'Launch artwork fits portrait and landscape; optional native asset and animation capture',
     (tester) async {
       final key = GlobalKey();
+      await tester.runAsync(
+        (FontLoader(
+          'Lora',
+        )..addFont(rootBundle.load('assets/fonts/Lora.ttf'))).load,
+      );
       Future<void> save(String path, {double ratio = 1}) => tester.runAsync(
         () async {
           final image =
@@ -204,10 +210,7 @@ void main() {
           Center(
             child: RepaintBoundary(
               key: key,
-              child: CustomPaint(
-                size: const Size(76, 76),
-                painter: CrescentFillPainter(const AlwaysStoppedAnimation(0)),
-              ),
+              child: const LaunchEmblem(progress: AlwaysStoppedAnimation(0)),
             ),
           ),
         );
@@ -230,6 +233,13 @@ void main() {
           ),
         );
         await _decode(tester);
+        expect(find.text('Dream Space'), findsOneWidget);
+        final mark = tester.getRect(find.byType(LaunchEmblem));
+        final title = tester.getRect(find.text('Dream Space'));
+        expect(title.top, greaterThan(mark.top + 128));
+        expect(mark.left, greaterThanOrEqualTo(0));
+        expect(mark.right, lessThanOrEqualTo(size.width));
+        expect(mark.bottom, lessThanOrEqualTo(size.height));
         expect(tester.takeException(), isNull);
       }
       const capture = String.fromEnvironment('LAUNCH_CAPTURE');

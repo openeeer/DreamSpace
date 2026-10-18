@@ -79,7 +79,12 @@
 
 Готовый ассет: `assets/launch/background.png`, 1024×1536. Создан встроенным imagegen;
 та же картинка включена в `ios/Runner/Assets.xcassets/LaunchBackground.imageset`.
-Полумесяц рисуется кодом, его начальный кадр экспортирован в LaunchMoon.imageset.
+Полумесяц, орбита, звёзды и надпись Dream Space рисуются кодом. Начальная
+композиция LaunchEmblem экспортирована в LaunchMoon.imageset: прозрачный
+PNG 840×780 (280×260 pt, 3x). Для повторного экспорта запустить
+`flutter test test/launch_screen_test.dart --dart-define=LAUNCH_MOON_CAPTURE=ios/Runner/Assets.xcassets/LaunchMoon.imageset/moon.png`.
+Размер и смещение в storyboard должны совпадать с LaunchArtwork: 280×260 pt,
+центр по X и центр по Y + 40 pt; полумесяц остаётся в центре экрана.
 
 Точный промпт генерации:
 
