@@ -11,13 +11,16 @@ Page<void> dreamRoute(BuildContext context, GoRouterState state, Widget child) {
       MediaQuery.disableAnimationsOf(context) ||
       ProviderScope.containerOf(context).read(settingsProvider)['animations'] ==
           'reduced';
+  // Keep decorative layers and live UIKit glass within their own page while
+  // both routes are visible during an interactive iOS back swipe.
+  final surface = ClipRect(
+    child: RepaintBoundary(child: CosmicBackground(child: child)),
+  );
   return reduced
-      ? NoTransitionPage<void>(
-          key: state.pageKey,
-          child: CosmicBackground(child: child),
-        )
+      ? NoTransitionPage<void>(key: state.pageKey, child: surface)
       : CupertinoPage<void>(
           key: state.pageKey,
-          child: CosmicBackground(child: child),
+          allowSnapshotting: false,
+          child: surface,
         );
 }

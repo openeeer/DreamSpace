@@ -353,7 +353,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                       Expanded(
                         child: Text(
                           tr(en, 'Вселенная снов', 'Dream Universe'),
-                          style: display(30),
+                          style: display(28),
                         ),
                       ),
                       JournalIconButton(

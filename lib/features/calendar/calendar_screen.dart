@@ -49,7 +49,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       child: Text(
                         DateFormat('LLLL yyyy', en ? 'en' : 'ru').format(month),
                         textAlign: TextAlign.center,
-                        style: display(22),
+                        style: display(20),
                       ),
                     ),
                     DreamGlassAction(
@@ -171,7 +171,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 22),
           SectionTitle(formatDate(selected, en)),
           if (entries.isEmpty)
             Padding(

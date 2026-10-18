@@ -288,8 +288,8 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                               tr(en, 'Дневник', 'Journal'),
                               style: display(
                                 MediaQuery.sizeOf(context).width < 360
-                                    ? 33
-                                    : 39,
+                                    ? 28
+                                    : 32,
                               ).copyWith(height: 1.05),
                             ),
                           ),
@@ -491,7 +491,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                               Expanded(
                                 child: Text(
                                   _month(entry.value.first.date, en),
-                                  style: display(24).copyWith(
+                                  style: display(20).copyWith(
                                     color: Theme.of(
                                       context,
                                     ).colorScheme.onSurface,

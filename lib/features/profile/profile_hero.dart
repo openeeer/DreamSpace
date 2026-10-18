@@ -40,7 +40,7 @@ class _DreamProfileHeroState extends ConsumerState<DreamProfileHero>
         !TickerMode.valuesOf(context).enabled;
     if (ready && !reduced && !motion.isAnimating) motion.repeat();
     if ((!ready || reduced) && motion.isAnimating) motion.stop();
-    final size = (MediaQuery.sizeOf(context).width * .58).clamp(180.0, 250.0);
+    final size = (MediaQuery.sizeOf(context).width * .46).clamp(148.0, 198.0);
     return IgnorePointer(
       child: ExcludeSemantics(
         child: Center(

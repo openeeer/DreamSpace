@@ -9,7 +9,7 @@ import 'native_glass.dart';
 import 'native_presentations.dart';
 
 abstract final class InternalStyle {
-  static const gutter = 22.0, radius = 28.0, maxWidth = 620.0;
+  static const gutter = 20.0, radius = 22.0, maxWidth = 620.0;
   static Color muted(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? Palette.secondary
@@ -32,7 +32,7 @@ class DreamGlassSurface extends ConsumerWidget {
   const DreamGlassSurface({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding = const EdgeInsets.all(16),
     this.radius = InternalStyle.radius,
     this.preset = DreamGlass.panel,
     this.onTap,
@@ -154,9 +154,9 @@ class DreamGlassAction extends ConsumerWidget {
           preset: prominent ? DreamGlass.selected : DreamGlass.control,
           child: CupertinoButton(
             padding: icon == null
-                ? const EdgeInsets.symmetric(horizontal: 15, vertical: 12)
+                ? const EdgeInsets.symmetric(horizontal: 14, vertical: 10)
                 : EdgeInsets.zero,
-            minimumSize: const Size(48, 48),
+            minimumSize: const Size(44, 44),
             onPressed: onPressed == null
                 ? null
                 : () {
@@ -173,7 +173,7 @@ class DreamGlassAction extends ConsumerWidget {
                   )
                 : Icon(
                     icon,
-                    size: 22,
+                    size: 19,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
           ),
@@ -201,7 +201,7 @@ class DreamInternalHeader extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(
       horizontal: InternalStyle.gutter,
-      vertical: 12,
+      vertical: 8,
     ),
     child: LayoutBuilder(
       builder: (context, c) {
@@ -225,10 +225,10 @@ class DreamInternalHeader extends StatelessWidget {
           textAlign: TextAlign.center,
           style: display(
             compact || actions.isNotEmpty
-                ? 25
+                ? 22
                 : c.maxWidth < 340
-                ? 32
-                : 40,
+                ? 26
+                : 28,
           ),
         );
         if (large || (c.maxWidth < 350 && actions.length > 1)) {
@@ -431,8 +431,8 @@ class DreamIconBubble extends StatelessWidget {
   final IconData icon;
   @override
   Widget build(BuildContext context) => Container(
-    width: 48,
-    height: 48,
+    width: 36,
+    height: 36,
     decoration: BoxDecoration(
       shape: BoxShape.circle,
       gradient: LinearGradient(
@@ -446,7 +446,7 @@ class DreamIconBubble extends StatelessWidget {
         width: .8,
       ),
     ),
-    child: Icon(icon, size: 24, color: InternalStyle.accent(context)),
+    child: Icon(icon, size: 19, color: InternalStyle.accent(context)),
   );
 }
 
@@ -468,14 +468,14 @@ class DreamSettingsRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final content = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
               DreamIconBubble(icon),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -551,10 +551,10 @@ class DreamSettingsSection extends StatelessWidget {
           child: Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 27, color: InternalStyle.accent(context)),
+                Icon(icon, size: 20, color: InternalStyle.accent(context)),
                 const SizedBox(width: 12),
               ],
-              Expanded(child: Text(title!, style: display(28))),
+              Expanded(child: Text(title!, style: display(21))),
             ],
           ),
         ),
@@ -567,7 +567,7 @@ class DreamSettingsSection extends StatelessWidget {
                 Divider(
                   height: 1,
                   thickness: .7,
-                  indent: 78,
+                  indent: 62,
                   endIndent: 18,
                   color: InternalStyle.accent(context).withValues(alpha: .2),
                 ),

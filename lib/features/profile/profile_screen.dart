@@ -68,7 +68,7 @@ class ProfileScreen extends ConsumerWidget {
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(
                           ProfileStyle.gutter,
-                          MediaQuery.paddingOf(context).top + 24,
+                          MediaQuery.paddingOf(context).top + 20,
                           ProfileStyle.gutter,
                           MediaQuery.viewPaddingOf(context).bottom + 122,
                         ),
@@ -82,8 +82,8 @@ class ProfileScreen extends ConsumerWidget {
                                     tr(en, 'Мой мир', 'My Universe'),
                                     style: display(
                                       MediaQuery.sizeOf(context).width < 360
-                                          ? 35
-                                          : 42,
+                                          ? 28
+                                          : 32,
                                     ).copyWith(height: 1.05),
                                   ),
                                 ),
@@ -118,7 +118,7 @@ class ProfileScreen extends ConsumerWidget {
                             Text(
                               tr(en, 'Исследователь снов', 'Dream Explorer'),
                               textAlign: TextAlign.center,
-                              style: display(28).copyWith(height: 1.2),
+                              style: display(23).copyWith(height: 1.2),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -244,11 +244,11 @@ class DreamStatsPanel extends StatelessWidget {
                           CupertinoIcons.leaf_arrow_circlepath,
                           CupertinoIcons.cloud,
                         ][i],
-                        size: 22,
+                        size: 18,
                         color: Palette.lavender,
                       ),
                       const SizedBox(height: 5),
-                      Text('${[total, streak, lucid][i]}', style: display(32)),
+                      Text('${[total, streak, lucid][i]}', style: display(26)),
                       const SizedBox(height: 5),
                       Text(
                         [
@@ -360,8 +360,8 @@ class DreamProfileMenuItem extends ConsumerWidget {
     child: Row(
       children: [
         Container(
-          width: 46,
-          height: 46,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
@@ -377,7 +377,7 @@ class DreamProfileMenuItem extends ConsumerWidget {
               width: .7,
             ),
           ),
-          child: Icon(icon, color: Palette.lavender, size: 23),
+          child: Icon(icon, color: Palette.lavender, size: 19),
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -387,7 +387,7 @@ class DreamProfileMenuItem extends ConsumerWidget {
               Text(
                 title,
                 style: display(
-                  19,
+                  17,
                 ).copyWith(color: Theme.of(context).colorScheme.onSurface),
               ),
               const SizedBox(height: 4),

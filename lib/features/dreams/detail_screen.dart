@@ -26,7 +26,7 @@ class DetailScreen extends ConsumerWidget {
         title: tr(en, 'Сон', 'Dream'),
         compact: true,
         hero: SizedBox(
-          height: 290,
+          height: MediaQuery.sizeOf(context).shortestSide < 400 ? 200 : 230,
           child: ShaderMask(
             blendMode: BlendMode.dstIn,
             shaderCallback: (r) => const LinearGradient(
@@ -67,7 +67,7 @@ class DetailScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 18),
-          Text(dreamTitle(dream, en), style: display(34)),
+          Text(dreamTitle(dream, en), style: display(28)),
           const SizedBox(height: 18),
           Wrap(
             spacing: 8,
@@ -81,7 +81,7 @@ class DetailScreen extends ConsumerWidget {
               if (dream.demo) DreamChip(tr(en, 'Пример', 'Sample')),
             ],
           ),
-          const SizedBox(height: 26),
+          const SizedBox(height: 20),
           DreamGlassSurface(
             child: SelectableText(
               dream.description,
@@ -130,7 +130,7 @@ class DetailScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 26),
+          const SizedBox(height: 20),
           DreamButton(
             label: tr(en, 'Найти на карте', 'Show on Map'),
             icon: CupertinoIcons.sparkles,

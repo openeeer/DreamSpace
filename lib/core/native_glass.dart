@@ -158,10 +158,10 @@ class NativeGlassButton extends StatelessWidget {
     },
     onChanged: (_) => onPressed?.call(),
     sizingChild: ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
       child: nativeSymbol(icon) == null || showIconLabel
           ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -175,7 +175,7 @@ class NativeGlassButton extends StatelessWidget {
                 ],
               ),
             )
-          : const SizedBox(width: 48, height: 48),
+          : const SizedBox(width: 44, height: 44),
     ),
   );
 }

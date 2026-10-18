@@ -174,7 +174,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                       ? TextAlign.left
                                       : TextAlign.center,
                                   style: display(
-                                    constraints.maxWidth < 360 ? 32 : 38,
+                                    constraints.maxWidth < 360 ? 28 : 32,
                                   ),
                                 ),
                                 const SizedBox(height: 18),
@@ -185,7 +185,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                       : TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 16,
-                                    height: 1.6,
+                                    height: 1.5,
                                     color: muted,
                                   ),
                                 ),
@@ -220,8 +220,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                               SizedBox(
                                                 height:
                                                     (constraints.maxHeight *
-                                                            .48)
-                                                        .clamp(180.0, 350.0),
+                                                            .43)
+                                                        .clamp(160.0, 290.0),
                                                 child: art,
                                               ),
                                               const SizedBox(height: 12),

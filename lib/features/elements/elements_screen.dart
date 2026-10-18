@@ -74,7 +74,9 @@ class _ElementsScreenState extends State<ElementsScreen> {
               children: [
                 for (final item in items)
                   SizedBox(
-                    width: c.maxWidth < 350
+                    width:
+                        c.maxWidth < 310 ||
+                            MediaQuery.textScalerOf(context).scale(14) > 19
                         ? c.maxWidth
                         : (c.maxWidth - 12) / 2,
                     child: DreamGlassSurface(
@@ -85,8 +87,8 @@ class _ElementsScreenState extends State<ElementsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: 52,
-                            height: 52,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: Palette.lavender.withValues(alpha: .13),
@@ -97,11 +99,12 @@ class _ElementsScreenState extends State<ElementsScreen> {
                                   : kind == ElementKind.place
                                   ? CupertinoIcons.location
                                   : CupertinoIcons.person,
+                              size: 20,
                               color: Palette.lavender,
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          Text(item.key.name, style: display(23)),
+                          const SizedBox(height: 12),
+                          Text(item.key.name, style: display(19)),
                           const SizedBox(height: 9),
                           Text(
                             '${item.value} ${tr(en, 'снов', 'dreams')}',
@@ -238,8 +241,8 @@ class ElementDetailScreen extends ConsumerWidget {
         children: [
           Center(
             child: Container(
-              width: 100,
-              height: 100,
+              width: 68,
+              height: 68,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -251,7 +254,7 @@ class ElementDetailScreen extends ConsumerWidget {
               ),
               child: const Icon(
                 CupertinoIcons.sparkles,
-                size: 44,
+                size: 28,
                 color: Palette.lavender,
               ),
             ),

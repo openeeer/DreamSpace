@@ -78,8 +78,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     opacity: .6,
                     child: Image.asset(
                       'assets/profile/dream_sphere.png',
-                      width: 90,
-                      height: 90,
+                      width: 64,
+                      height: 64,
                       cacheWidth: 240,
                     ),
                   ),
@@ -87,13 +87,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(right: 65, bottom: 28),
+              padding: const EdgeInsets.only(right: 58, bottom: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     tr(en, 'Твой DreamSpace', 'Your DreamSpace'),
-                    style: display(30),
+                    style: display(24),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -118,7 +118,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             padding: const EdgeInsets.only(bottom: 24),
             child: Image.asset(
               'assets/profile/settings_handwritten_ru.png',
-              height: 94,
+              height: 64,
               fit: BoxFit.contain,
               semanticLabel: 'Маленькие настройки — большие сны',
             ),
@@ -173,7 +173,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
         DreamSettingsSection(
           title: tr(en, 'Утренний ритуал', 'Morning ritual'),
           icon: CupertinoIcons.sunrise,
@@ -258,7 +258,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
         DreamSettingsSection(
           title: tr(en, 'Ощущения', 'Experience'),
           icon: CupertinoIcons.sparkles,
@@ -300,7 +300,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
         DreamSettingsSection(
           title: tr(en, 'Данные', 'Your data'),
           icon: CupertinoIcons.archivebox,
@@ -328,7 +328,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ],
         ),
         const SizedBox(height: 28),
-        Center(child: Text('DreamSpace · 1.0.0', style: display(22))),
+        Center(child: Text('DreamSpace · 1.0.0', style: display(19))),
         const SizedBox(height: 8),
         Text(
           tr(
@@ -427,7 +427,7 @@ class _DreamLicensesPageState extends State<DreamLicensesPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (final entry in snapshot.data!) ...[
-                  Text(entry.packages.join(', '), style: display(22)),
+                  Text(entry.packages.join(', '), style: display(19)),
                   const SizedBox(height: 12),
                   SelectableText(
                     entry.paragraphs.map((p) => p.text).join('\n\n'),

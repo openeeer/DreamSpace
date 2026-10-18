@@ -52,7 +52,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             final gutter = width < 370 ? 18.0 : 22.0;
             final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
             final cardHeight =
-                math.max(204.0, (width - gutter * 2) / 2.05) *
+                math.max(192.0, (width - gutter * 2) / 2.25) *
                 math.max(1, scale);
             return Stack(
               children: [
@@ -109,7 +109,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     SliverPadding(
                       padding: EdgeInsets.fromLTRB(
                         gutter,
-                        MediaQuery.paddingOf(context).top + 30,
+                        MediaQuery.paddingOf(context).top + 20,
                         gutter,
                         MediaQuery.viewPaddingOf(context).bottom + 122,
                       ),
@@ -126,7 +126,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       child: Text(
                                         'DreamSpace',
                                         style: display(
-                                          width < 370 ? 34 : 40,
+                                          width < 370 ? 28 : 32,
                                         ).copyWith(letterSpacing: -1.5),
                                       ),
                                     ),
@@ -147,7 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         },
                                         child: Icon(
                                           CupertinoIcons.moon_fill,
-                                          size: 26,
+                                          size: 21,
                                           color: light
                                               ? Theme.of(
                                                   context,
@@ -166,7 +166,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     'Your dream journal',
                                   ),
                                   style: TextStyle(
-                                    fontSize: width < 370 ? 15 : 17,
+                                    fontSize: 15,
                                     color: light
                                         ? Theme.of(
                                             context,
@@ -215,7 +215,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             if (featured.length > 1)
                               SizedBox(
-                                height: 30,
+                                height: 44,
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -240,8 +240,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                                   curve: Curves.easeOutCubic,
                                                 ),
                                           child: SizedBox(
-                                            width: 22,
-                                            height: 30,
+                                            width: 44,
+                                            height: 44,
                                             child: Center(
                                               child: AnimatedContainer(
                                                 duration: reduced
@@ -367,7 +367,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         '“',
                                         style: TextStyle(
                                           fontFamily: 'Lora',
-                                          fontSize: 36,
+                                          fontSize: 28,
                                           color: Palette.lavender,
                                         ),
                                       ),
@@ -508,7 +508,7 @@ class _QuoteMoon extends StatelessWidget {
   Widget build(BuildContext context) => Stack(
     alignment: Alignment.center,
     children: [
-      const Icon(CupertinoIcons.moon, size: 40, color: Palette.gold),
+      const Icon(CupertinoIcons.moon, size: 28, color: Palette.gold),
       Positioned.fill(
         child: Image.asset(
           'assets/backgrounds/nebula_foreground.webp',
@@ -576,10 +576,10 @@ class _Heading extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      Expanded(child: Text(title, style: display(23))),
+      Expanded(child: Text(title, style: display(20))),
       CupertinoButton(
         padding: const EdgeInsets.only(left: 10),
-        minimumSize: const Size(44, 32),
+        minimumSize: const Size(44, 44),
         onPressed: onTap,
         child: Row(
           children: [
@@ -624,7 +624,7 @@ class _HeroDream extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -632,16 +632,16 @@ class _HeroDream extends StatelessWidget {
                   formatDate(dream.date, en),
                   style: const TextStyle(fontSize: 12, color: HomeStyle.muted),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
                 Text(
                   dreamTitle(dream, en),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: display(
-                    24,
+                    21,
                   ).copyWith(color: HomeStyle.text, height: 1.1),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
                 Expanded(
                   child: FractionallySizedBox(
                     widthFactor: .67,
@@ -682,8 +682,8 @@ class _HeroDream extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      width: 44,
-                      height: 44,
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Palette.lavender.withValues(alpha: .16),
@@ -692,7 +692,7 @@ class _HeroDream extends StatelessWidget {
                       child: const Icon(
                         CupertinoIcons.chevron_right,
                         color: HomeStyle.text,
-                        size: 22,
+                        size: 17,
                       ),
                     ),
                   ],
@@ -793,7 +793,7 @@ class _RecordButton extends ConsumerWidget {
                   children: [
                     const Icon(
                       CupertinoIcons.plus,
-                      size: 25,
+                      size: 20,
                       color: HomeStyle.text,
                     ),
                     const SizedBox(width: 12),
@@ -801,7 +801,7 @@ class _RecordButton extends ConsumerWidget {
                       child: Text(
                         tr(en, 'Записать сон', 'Record Dream'),
                         style: const TextStyle(
-                          fontSize: 17,
+                          fontSize: 15,
                           color: HomeStyle.text,
                         ),
                       ),

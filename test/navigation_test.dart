@@ -50,6 +50,34 @@ void main() {
     await tester.tap(find.text('Лунная библиотека').first);
     await frame();
     expect(find.byTooltip('Редактировать'), findsOneWidget);
+    final detailContext = tester.element(find.byTooltip('Редактировать'));
+    final detailRoute = ModalRoute.of(detailContext)! as PageRoute<void>;
+    expect(detailRoute.allowSnapshotting, isFalse);
+    expect(
+      (detailRoute.settings as CupertinoPage<void>).child,
+      isA<ClipRect>(),
+    );
+
+    // An interrupted edge swipe must restore the current page and its controls.
+    final backSwipe = await tester.startGesture(const Offset(1, 300));
+    await backSwipe.moveBy(const Offset(65, 0));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(detailRoute.popGestureInProgress, isTrue);
+    await backSwipe.moveBy(const Offset(-55, 0));
+    await backSwipe.up();
+    await frame();
+    expect(find.byTooltip('Редактировать'), findsOneWidget);
+    expect(detailRoute.animation!.value, 1);
+
+    await tester.timedDragFrom(
+      const Offset(1, 300),
+      const Offset(330, 0),
+      const Duration(milliseconds: 400),
+    );
+    await frame();
+    expect(find.text('DreamSpace'), findsOneWidget);
+    await tester.tap(find.text('Лунная библиотека').first);
+    await frame();
     await tester.tap(find.byIcon(CupertinoIcons.back));
     await frame();
     expect(find.text('DreamSpace'), findsOneWidget);

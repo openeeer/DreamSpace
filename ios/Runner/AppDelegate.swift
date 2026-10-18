@@ -609,7 +609,7 @@ final class DreamNativeGlass: NSObject, FlutterPlatformView {
         appearance.image = symbol.flatMap { UIImage(systemName: $0) }
           ?? (selected ? UIImage(systemName: "checkmark") : nil)
         appearance.imagePadding = 8
-        appearance.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 21, weight: .medium)
+        appearance.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 19 * min(scale, 1.5), weight: .medium)
         appearance.title = symbol == nil || (config["showIconLabel"] as? Bool ?? false) ? label : nil
         appearance.showsActivityIndicator = config["busy"] as? Bool ?? false
         appearance.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
@@ -617,7 +617,7 @@ final class DreamNativeGlass: NSObject, FlutterPlatformView {
           outgoing.font = UIFont.systemFont(ofSize: 14 * scale, weight: .semibold)
           return outgoing
         }
-        appearance.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 14, bottom: 10, trailing: 14)
+        appearance.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
         button.configuration = appearance
       } else {
         if let symbol = config["symbol"] as? String {

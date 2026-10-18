@@ -161,6 +161,8 @@ void main() {
       });
     }
     if (output.isNotEmpty) {
+      router.go('/home');
+      await tester.pumpAndSettle();
       await tester.runAsync(() async {
         final image =
             await (boundary.currentContext!.findRenderObject()

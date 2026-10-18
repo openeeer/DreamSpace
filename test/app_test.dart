@@ -97,7 +97,7 @@ void main() {
     expect(find.text('Лунная библиотека'), findsOneWidget);
     await tester.drag(
       find.byType(CustomScrollView).last,
-      const Offset(0, -400),
+      const Offset(0, -160),
     );
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Лунная библиотека').hitTestable(), findsOneWidget);

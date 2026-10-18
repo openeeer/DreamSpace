@@ -154,8 +154,9 @@ class _CosmicBackgroundState extends ConsumerState<CosmicBackground>
         settings['animations'] == 'reduced' ||
         MediaQuery.disableAnimationsOf(context);
     final light = Theme.of(context).brightness == Brightness.light;
-    if (!reduced && foreground && !motion.isAnimating) motion.repeat();
-    if ((reduced || !foreground) && motion.isAnimating) motion.stop();
+    final active = foreground && TickerMode.valuesOf(context).enabled;
+    if (!reduced && active && !motion.isAnimating) motion.repeat();
+    if ((reduced || !active) && motion.isAnimating) motion.stop();
     return Stack(
       fit: StackFit.expand,
       children: [

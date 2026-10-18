@@ -313,7 +313,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
             ),
           Text(
             tr(en, 'Что тебе приснилось?', 'What did you dream about?'),
-            style: display(32),
+            style: display(25),
           ),
           const SizedBox(height: 12),
           Text(
@@ -329,12 +329,12 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
             child: TextField(
               controller: body,
               onTapOutside: (_) => FocusScope.of(context).unfocus(),
-              minLines: 7,
+              minLines: 5,
               maxLines: null,
               autofocus: false,
               keyboardAppearance: Theme.of(context).brightness,
               textCapitalization: TextCapitalization.sentences,
-              style: const TextStyle(fontSize: 17, height: 1.65),
+              style: const TextStyle(fontSize: 17, height: 1.5),
               decoration: InputDecoration(
                 hintText: tr(en, 'Я помню…', 'I remember…'),
                 alignLabelWithHint: true,
@@ -361,7 +361,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
           const SizedBox(height: 16),
           SectionTitle(tr(en, 'Как ты себя чувствовал?', 'How did it feel?')),
           SizedBox(
-            height: 86 + MediaQuery.textScalerOf(context).scale(24),
+            height: 68 + MediaQuery.textScalerOf(context).scale(24),
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [

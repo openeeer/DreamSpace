@@ -55,14 +55,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 const Icon(
                   CupertinoIcons.moon_stars,
                   color: Palette.lavender,
-                  size: 44,
+                  size: 30,
                 ),
                 const SizedBox(width: 24),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${dreams.length}', style: display(54)),
+                      Text('${dreams.length}', style: display(36)),
                       Text(
                         tr(en, 'снов за этот период', 'dreams in this period'),
                       ),
@@ -142,7 +142,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               );
             },
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 22),
           SectionTitle(
             tr(en, 'Активность за 14 дней', 'Activity · last 14 days'),
           ),
@@ -214,7 +214,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 22),
           SectionTitle(tr(en, 'Палитра настроений', 'Mood distribution')),
           DreamGlassSurface(
             child: Column(
@@ -267,7 +267,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
             ),
           ),
           for (final kind in [ElementKind.symbol, ElementKind.place]) ...[
-            const SizedBox(height: 28),
+            const SizedBox(height: 22),
             SectionTitle(
               kind == ElementKind.symbol
                   ? tr(en, 'Повторяющиеся образы', 'Recurring symbols')
@@ -292,7 +292,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               ),
             ),
           ],
-          const SizedBox(height: 28),
+          const SizedBox(height: 22),
           SectionTitle(tr(en, 'Темы снов', 'Dream themes')),
           DreamGlassSurface(
             child: Column(
@@ -343,7 +343,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(value, style: display(32)),
+        Text(value, style: display(26)),
         const SizedBox(height: 8),
         Text(title, style: const TextStyle(fontSize: 12)),
       ],

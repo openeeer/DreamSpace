@@ -99,7 +99,7 @@ class JournalIconButton extends StatelessWidget {
         onPressed: onPressed,
         child: Icon(
           icon,
-          size: 21,
+          size: 19,
           semanticLabel: label,
           color: Theme.of(context).colorScheme.onSurface,
         ),
@@ -297,7 +297,7 @@ class _DreamJournalCardState extends ConsumerState<DreamJournalCard> {
               button: true,
               label: dreamTitle(dream, en),
               child: Container(
-                height: math.max(198.0, c.maxWidth / 1.85) * math.max(1, scale),
+                height: math.max(178.0, c.maxWidth / 2.15) * math.max(1, scale),
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(23),
@@ -359,7 +359,7 @@ class _DreamJournalCardState extends ConsumerState<DreamJournalCard> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: display(
-                                23,
+                                20,
                               ).copyWith(color: Palette.text, height: 1.15),
                             ),
                           ),
