@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:dreamspace/main.dart';
 import 'package:dreamspace/data/database.dart';
 import 'package:dreamspace/data/repository.dart';
+import 'package:dreamspace/data/demo.dart';
 import 'package:dreamspace/data/providers.dart';
 import 'package:dreamspace/features/dreams/journal_components.dart';
 import 'package:dreamspace/features/dreams/journal_screen.dart';
@@ -39,7 +40,11 @@ void main() {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);
     final repo = DreamRepository(db);
-    await tester.runAsync(repo.initialize);
+    await tester.runAsync(() async {
+      for (final dream in demoDreams(DateTime(2026, 9, 11))) {
+        await repo.save(dream);
+      }
+    });
     final container = ProviderContainer(
       overrides: [repositoryProvider.overrideWithValue(repo)],
     );

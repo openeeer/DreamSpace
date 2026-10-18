@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/design.dart';
 import '../../core/internal_page.dart';
+import '../../core/native_glass.dart';
+import '../../core/native_presentations.dart';
 import '../../data/providers.dart';
 import '../../models/dream.dart';
 import '../insights/analytics.dart';
@@ -180,29 +182,38 @@ class ElementDetailScreen extends ConsumerWidget {
             icon: CupertinoIcons.pencil,
             onPressed: () async {
               final controller = TextEditingController(text: element.name);
-              final name = await showCupertinoDialog<String>(
-                context: context,
-                builder: (ctx) => CupertinoAlertDialog(
-                  title: Text(tr(en, 'Название образа', 'Element name')),
-                  content: Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: CupertinoTextField(
-                      controller: controller,
-                      autofocus: true,
-                    ),
-                  ),
-                  actions: [
-                    CupertinoDialogAction(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text(tr(en, 'Отмена', 'Cancel')),
-                    ),
-                    CupertinoDialogAction(
-                      onPressed: () => Navigator.pop(ctx, controller.text),
-                      child: Text(tr(en, 'Сохранить', 'Save')),
-                    ),
-                  ],
-                ),
-              );
+              final name = usesNativeGlass
+                  ? await nativePresentations.invokeMethod<String>('prompt', {
+                      ...presentationStyle(context),
+                      'title': tr(en, 'Название образа', 'Element name'),
+                      'value': element.name,
+                      'cancel': tr(en, 'Отмена', 'Cancel'),
+                      'accept': tr(en, 'Сохранить', 'Save'),
+                    })
+                  : await showCupertinoDialog<String>(
+                      context: context,
+                      builder: (ctx) => CupertinoAlertDialog(
+                        title: Text(tr(en, 'Название образа', 'Element name')),
+                        content: Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: CupertinoTextField(
+                            controller: controller,
+                            autofocus: true,
+                          ),
+                        ),
+                        actions: [
+                          CupertinoDialogAction(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text(tr(en, 'Отмена', 'Cancel')),
+                          ),
+                          CupertinoDialogAction(
+                            onPressed: () =>
+                                Navigator.pop(ctx, controller.text),
+                            child: Text(tr(en, 'Сохранить', 'Save')),
+                          ),
+                        ],
+                      ),
+                    );
               if (name == null || name.trim().isEmpty) return;
               try {
                 await ref.read(repositoryProvider).renameElement(element, name);

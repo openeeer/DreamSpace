@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'core/design.dart';
+import 'core/launch_screen.dart';
 import 'core/native_tab_bar.dart';
+import 'core/native_glass.dart';
 import 'core/route_surface.dart';
 import 'core/notifications.dart';
 import 'data/database.dart';
@@ -26,6 +29,7 @@ import 'features/onboarding/onboarding_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   LicenseRegistry.addLicense(() async* {
     for (final font in ['Lora', 'Inter']) {
@@ -34,6 +38,17 @@ Future<void> main() async {
       ], await rootBundle.loadString('assets/licenses/$font-OFL.txt'));
     }
   });
+  final binding = WidgetsBinding.instance;
+  binding.deferFirstFrame();
+  runApp(
+    DreamLaunch(
+      initialize: initializeDreamSpace,
+      onBackgroundReady: binding.allowFirstFrame,
+    ),
+  );
+}
+
+Future<LaunchDestination> initializeDreamSpace() async {
   await initializeDateFormatting('ru');
   final repo = DreamRepository(AppDatabase());
   try {
@@ -47,47 +62,46 @@ Future<void> main() async {
     );
     container.read(settingsProvider.notifier).load(settings);
     final router = createRouter(settings['onboarded'] == 'true');
-    try {
-      await reminders.initialize(() {
-        if (router.routeInformationProvider.value.uri.path != '/record') {
-          router.push('/record');
-        }
-      });
-      if (settings['reminder'] == 'true') {
-        await reminders.schedule(
-          int.parse(settings['hour'] ?? '8'),
-          int.parse(settings['minute'] ?? '0'),
-          en: settings['language'] == 'en',
-          request: false,
-        );
-      }
-      if (reminders.openedFromNotification && settings['onboarded'] == 'true') {
-        router.go('/record');
-      }
-    } catch (e) {
-      debugPrint('Reminder initialization: $e');
-    }
-    runApp(
-      UncontrolledProviderScope(
+    // Notification setup can take longer than local database setup. It must not
+    // hold the first frame or add another wait after the launch animation.
+    unawaited(initializeReminders(settings, router));
+    return LaunchDestination(
+      haptics: settings['haptics'] != 'false',
+      reducedMotion: settings['animations'] == 'reduced',
+      app: UncontrolledProviderScope(
         container: container,
         child: DreamSpaceApp(router: router),
       ),
     );
+  } catch (_) {
+    await repo.db.close();
+    rethrow;
+  }
+}
+
+Future<void> initializeReminders(
+  Map<String, String> settings,
+  GoRouter router,
+) async {
+  try {
+    await reminders.initialize(() {
+      if (router.routeInformationProvider.value.uri.path != '/record') {
+        router.push('/record');
+      }
+    });
+    if (settings['reminder'] == 'true') {
+      await reminders.schedule(
+        int.parse(settings['hour'] ?? '8'),
+        int.parse(settings['minute'] ?? '0'),
+        en: settings['language'] == 'en',
+        request: false,
+      );
+    }
+    if (reminders.openedFromNotification && settings['onboarded'] == 'true') {
+      router.go('/record');
+    }
   } catch (e) {
-    runApp(
-      MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text(
-                'Не удалось открыть DreamSpace. Перезапусти приложение.\n$e',
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    debugPrint('Reminder initialization: $e');
   }
 }
 
@@ -256,9 +270,11 @@ class DreamShell extends ConsumerWidget {
         children: [
           shell,
           Positioned(
-            left: 22,
-            right: 22,
-            bottom: MediaQuery.viewPaddingOf(context).bottom + 10,
+            left: usesNativeGlass ? 0 : 22,
+            right: usesNativeGlass ? 0 : 22,
+            bottom: usesNativeGlass
+                ? 0
+                : MediaQuery.viewPaddingOf(context).bottom + 10,
             child: DreamTabBar(
               index: shell.currentIndex,
               labels: labels,

@@ -99,24 +99,48 @@ class _InsightsScreenState extends State<InsightsScreen> {
             ),
             const SizedBox(height: 18),
           ],
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              _tile(tr(en, 'Осознанных', 'Lucid dreams'), '${stats.lucid}'),
-              _tile(
-                tr(en, 'Серия сейчас', 'Current streak'),
-                '${totalStats.streak}',
-              ),
-              _tile(
-                tr(en, 'Лучшая серия', 'Longest streak'),
-                '${totalStats.longest}',
-              ),
-              _tile(
-                tr(en, 'Повторных символов', 'Recurring symbols'),
-                '${stats.recurringSymbols}',
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final tiles = [
+                _tile(tr(en, 'Осознанных', 'Lucid dreams'), '${stats.lucid}'),
+                _tile(
+                  tr(en, 'Серия сейчас', 'Current streak'),
+                  '${totalStats.streak}',
+                ),
+                _tile(
+                  tr(en, 'Лучшая серия', 'Longest streak'),
+                  '${totalStats.longest}',
+                ),
+                _tile(
+                  tr(en, 'Повторных символов', 'Recurring symbols'),
+                  '${stats.recurringSymbols}',
+                ),
+              ];
+              if (constraints.maxWidth < 320 ||
+                  MediaQuery.textScalerOf(context).scale(14) > 20) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 12,
+                  children: tiles,
+                );
+              }
+              return Column(
+                spacing: 12,
+                children: [
+                  for (var i = 0; i < tiles.length; i += 2)
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(child: tiles[i]),
+                          const SizedBox(width: 12),
+                          Expanded(child: tiles[i + 1]),
+                        ],
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 28),
           SectionTitle(
@@ -315,17 +339,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
       );
     },
   );
-  Widget _tile(String title, String value) => SizedBox(
-    width: 150,
-    child: DreamGlassSurface(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(value, style: display(32)),
-          const SizedBox(height: 8),
-          Text(title, style: const TextStyle(fontSize: 12)),
-        ],
-      ),
+  Widget _tile(String title, String value) => DreamGlassSurface(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(value, style: display(32)),
+        const SizedBox(height: 8),
+        Text(title, style: const TextStyle(fontSize: 12)),
+      ],
     ),
   );
 }

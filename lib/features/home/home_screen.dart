@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/design.dart';
+import '../../core/native_glass.dart';
 import '../../data/providers.dart';
 import '../../models/dream.dart';
 import '../dream_map/map_screen.dart';
@@ -530,6 +531,14 @@ class _Glass extends ConsumerWidget {
   final double radius;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (usesNativeGlass && child is CupertinoButton) {
+      final button = child as CupertinoButton;
+      return NativeGlassButton(
+        label: tr(ref.watch(englishProvider), 'Мой мир', 'My world'),
+        icon: CupertinoIcons.moon_fill,
+        onPressed: button.onPressed,
+      );
+    }
     final opaque =
         ref.watch(settingsProvider)['opaque'] == 'true' ||
         MediaQuery.highContrastOf(context);
@@ -725,74 +734,93 @@ class _RecordButton extends ConsumerWidget {
   const _RecordButton({required this.en});
   final bool en;
   @override
-  Widget build(BuildContext context, WidgetRef ref) => _Pressable(
-    label: tr(en, 'Записать сон', 'Record Dream'),
-    onPressed: () {
-      if (ref.read(settingsProvider)['haptics'] != 'false') {
-        HapticFeedback.lightImpact();
-      }
-      context.push('/record');
-    },
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(34),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 58),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(34),
-          gradient: const LinearGradient(
-            colors: [Color(0xbb9c63df), Color(0xc5374bb8), Color(0xbb668edb)],
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (usesNativeGlass) {
+      return NativeGlassButton(
+        label: tr(en, 'Записать сон', 'Record Dream'),
+        icon: CupertinoIcons.add,
+        showIconLabel: true,
+        prominent: true,
+        onPressed: () {
+          if (ref.read(settingsProvider)['haptics'] != 'false') {
+            HapticFeedback.lightImpact();
+          }
+          context.push('/record');
+        },
+      );
+    }
+    return _Pressable(
+      label: tr(en, 'Записать сон', 'Record Dream'),
+      onPressed: () {
+        if (ref.read(settingsProvider)['haptics'] != 'false') {
+          HapticFeedback.lightImpact();
+        }
+        context.push('/record');
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(34),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 58),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(34),
+            gradient: const LinearGradient(
+              colors: [Color(0xbb9c63df), Color(0xc5374bb8), Color(0xbb668edb)],
+            ),
+            border: Border.all(color: const Color(0x99ded5ff), width: .8),
           ),
-          border: Border.all(color: const Color(0x99ded5ff), width: .8),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Opacity(
-                  opacity: .28,
-                  child: Image.asset(
-                    'assets/backgrounds/nebula_foreground.webp',
-                    fit: BoxFit.cover,
-                    cacheWidth: 800,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Opacity(
+                    opacity: .28,
+                    child: Image.asset(
+                      'assets/backgrounds/nebula_foreground.webp',
+                      fit: BoxFit.cover,
+                      cacheWidth: 800,
+                    ),
                   ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    CupertinoIcons.plus,
-                    size: 25,
-                    color: HomeStyle.text,
-                  ),
-                  const SizedBox(width: 12),
-                  Flexible(
-                    child: Text(
-                      tr(en, 'Записать сон', 'Record Dream'),
-                      style: const TextStyle(
-                        fontSize: 17,
-                        color: HomeStyle.text,
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 16,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      CupertinoIcons.plus,
+                      size: 25,
+                      color: HomeStyle.text,
+                    ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        tr(en, 'Записать сон', 'Record Dream'),
+                        style: const TextStyle(
+                          fontSize: 17,
+                          color: HomeStyle.text,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 22),
-                  const Icon(
-                    CupertinoIcons.sparkles,
-                    size: 22,
-                    color: HomeStyle.text,
-                  ),
-                ],
+                    const SizedBox(width: 22),
+                    const Icon(
+                      CupertinoIcons.sparkles,
+                      size: 22,
+                      color: HomeStyle.text,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _Pressable extends ConsumerStatefulWidget {

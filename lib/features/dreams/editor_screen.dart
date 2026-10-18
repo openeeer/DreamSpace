@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/design.dart';
 import '../../core/internal_page.dart';
+import '../../core/native_glass.dart';
 import '../../data/providers.dart';
 import '../../models/dream.dart';
 
@@ -627,13 +628,23 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
             ),
         ],
       ),
-      CupertinoSlider(
-        value: (value ?? 0).toDouble(),
-        max: 100,
-        divisions: 20,
-        activeColor: Palette.lavender,
-        onChanged: (v) => onChanged(v.round()),
-      ),
+      if (usesNativeGlass)
+        NativeGlassControl(
+          kind: 'slider',
+          properties: {'label': label, 'value': value ?? 0},
+          sizingChild: const SizedBox(height: 48, width: double.infinity),
+          onChanged: (next) {
+            if (next is int) onChanged(next);
+          },
+        )
+      else
+        CupertinoSlider(
+          value: (value ?? 0).toDouble(),
+          max: 100,
+          divisions: 20,
+          activeColor: Palette.lavender,
+          onChanged: (v) => onChanged(v.round()),
+        ),
     ],
   );
 }

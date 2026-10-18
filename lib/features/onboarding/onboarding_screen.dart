@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/design.dart';
 import '../../core/internal_page.dart';
+import '../../core/native_glass.dart';
 import '../../data/providers.dart';
 import '../profile/profile_hero.dart';
 
@@ -46,6 +47,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           'Could not save. Please try again.',
         );
       });
+    }
+  }
+
+  void advance(bool reduced) {
+    if (page == 2) {
+      finish();
+      return;
+    }
+    dreamSelection(ref);
+    if (reduced) {
+      pages.jumpToPage(page + 1);
+    } else {
+      pages.nextPage(
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOutCubic,
+      );
     }
   }
 
@@ -100,17 +117,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   child: Row(
                     children: [
                       Expanded(child: Text('DreamSpace', style: display(22))),
-                      CupertinoButton(
-                        onPressed: saving ? null : finish,
-                        child: Text(
-                          tr(en, 'Пропустить', 'Skip'),
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14,
-                            color: muted,
+                      if (usesNativeGlass)
+                        NativeGlassButton(
+                          label: tr(en, 'Пропустить', 'Skip'),
+                          glass: false,
+                          onPressed: saving ? null : finish,
+                        )
+                      else
+                        CupertinoButton(
+                          onPressed: saving ? null : finish,
+                          child: Text(
+                            tr(en, 'Пропустить', 'Skip'),
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              color: muted,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -258,74 +282,74 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           ),
                         SizedBox(
                           width: double.infinity,
-                          child: CupertinoButton(
-                            color: light
-                                ? const Color(0xff6652b8)
-                                : Palette.lavender,
-                            borderRadius: BorderRadius.circular(22),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 22,
-                              vertical: 18,
-                            ),
-                            onPressed: saving
-                                ? null
-                                : () {
-                                    if (page == 2) {
-                                      finish();
-                                      return;
-                                    }
-                                    dreamSelection(ref);
-                                    if (reduced) {
-                                      pages.jumpToPage(page + 1);
-                                      return;
-                                    }
-                                    pages.nextPage(
-                                      duration: const Duration(
-                                        milliseconds: 380,
-                                      ),
-                                      curve: Curves.easeInOutCubic,
-                                    );
-                                  },
-                            child: saving
-                                ? const CupertinoActivityIndicator()
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Flexible(
-                                        child: Text(
-                                          page == 2
-                                              ? tr(
-                                                  en,
-                                                  'Открыть DreamSpace',
-                                                  'Open DreamSpace',
-                                                )
-                                              : tr(
-                                                  en,
-                                                  'Продолжить',
-                                                  'Continue',
-                                                ),
-                                          textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.w600,
-                                            color: light
-                                                ? Colors.white
-                                                : Palette.night,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Icon(
-                                        CupertinoIcons.arrow_right,
-                                        size: 19,
-                                        color: light
-                                            ? Colors.white
-                                            : Palette.night,
-                                      ),
-                                    ],
+                          child: usesNativeGlass
+                              ? NativeGlassButton(
+                                  label: page == 2
+                                      ? tr(
+                                          en,
+                                          'Открыть DreamSpace',
+                                          'Open DreamSpace',
+                                        )
+                                      : tr(en, 'Продолжить', 'Continue'),
+                                  prominent: true,
+                                  busy: saving,
+                                  onPressed: saving
+                                      ? null
+                                      : () => advance(reduced),
+                                )
+                              : CupertinoButton(
+                                  color: light
+                                      ? const Color(0xff6652b8)
+                                      : Palette.lavender,
+                                  borderRadius: BorderRadius.circular(22),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 22,
+                                    vertical: 18,
                                   ),
-                          ),
+                                  onPressed: saving
+                                      ? null
+                                      : () => advance(reduced),
+                                  child: saving
+                                      ? const CupertinoActivityIndicator()
+                                      : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                page == 2
+                                                    ? tr(
+                                                        en,
+                                                        'Открыть DreamSpace',
+                                                        'Open DreamSpace',
+                                                      )
+                                                    : tr(
+                                                        en,
+                                                        'Продолжить',
+                                                        'Continue',
+                                                      ),
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                  fontSize: 17,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: light
+                                                      ? Colors.white
+                                                      : Palette.night,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Icon(
+                                              CupertinoIcons.arrow_right,
+                                              size: 19,
+                                              color: light
+                                                  ? Colors.white
+                                                  : Palette.night,
+                                            ),
+                                          ],
+                                        ),
+                                ),
                         ),
                       ],
                     ),

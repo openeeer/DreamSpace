@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
+import '../../core/native_presentations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -204,34 +205,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
   }
 
   Future<void> menu(bool en) async {
-    final action = await showCupertinoModalPopup<String>(
-      context: context,
-      builder: (ctx) => CupertinoActionSheet(
-        title: Text(tr(en, 'Вселенная снов', 'Dream universe')),
-        actions: [
-          for (final (id, label) in [
-            ('all', tr(en, 'Показать все связи', 'Show all connections')),
-            (
-              'strong',
-              tr(en, 'Только сильные связи', 'Strong connections only'),
-            ),
-            (
-              'position',
-              tr(en, 'Сбросить положение карты', 'Reset map position'),
-            ),
-            ('zoom', tr(en, 'Сбросить масштаб', 'Reset zoom')),
-            ('help', tr(en, 'Объяснение карты', 'About the map')),
-          ])
-            CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(ctx, id),
-              child: Text(label),
-            ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: Text(tr(en, 'Отмена', 'Cancel')),
-        ),
-      ),
+    final action = await dreamActionSheet(
+      context,
+      title: tr(en, 'Вселенная снов', 'Dream universe'),
+      actions: [
+        ('all', tr(en, 'Показать все связи', 'Show all connections')),
+        ('strong', tr(en, 'Только сильные связи', 'Strong connections only')),
+        ('position', tr(en, 'Сбросить положение карты', 'Reset map position')),
+        ('zoom', tr(en, 'Сбросить масштаб', 'Reset zoom')),
+        ('help', tr(en, 'Объяснение карты', 'About the map')),
+      ],
+      cancelLabel: tr(en, 'Отмена', 'Cancel'),
     );
     if (!mounted || action == null) return;
     switch (action) {
@@ -256,55 +240,35 @@ class _MapScreenState extends ConsumerState<MapScreen>
           ),
         );
       case 'help':
-        await showCupertinoDialog<void>(
-          context: context,
-          builder: (ctx) => CupertinoAlertDialog(
-            title: Text(tr(en, 'Твоё созвездие', 'Your constellation')),
-            content: Text(
-              tr(
-                en,
-                'Каждый круг — один сон. Линии соединяют общие символы, людей, места и эмоции. Сильная связь — минимум два совпадения. Ищи по названию или образам, двигай карту одним пальцем и меняй масштаб двумя. Двойное нажатие на фон возвращает всю карту.',
-                'Each circle is a dream. Lines connect shared symbols, people, places and moods. Strong connections share at least two matches. Search titles or elements, drag to pan and pinch to zoom. Double-tap the background to fit the map.',
-              ),
-            ),
-            actions: [
-              CupertinoDialogAction(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(tr(en, 'Понятно', 'Got it')),
-              ),
-            ],
+        await dreamAlert(
+          context,
+          title: tr(en, 'Твоё созвездие', 'Your constellation'),
+          message: tr(
+            en,
+            'Каждый круг — один сон. Линии соединяют общие символы, людей, места и эмоции. Сильная связь — минимум два совпадения. Ищи по названию или образам, двигай карту одним пальцем и меняй масштаб двумя. Двойное нажатие на фон возвращает всю карту.',
+            'Each circle is a dream. Lines connect shared symbols, people, places and moods. Strong connections share at least two matches. Search titles or elements, drag to pan and pinch to zoom. Double-tap the background to fit the map.',
           ),
+          closeLabel: tr(en, 'Понятно', 'Got it'),
         );
     }
   }
 
   Future<void> nodeMenu(Dream dream, bool en) async {
     haptic();
-    final action = await showCupertinoModalPopup<String>(
-      context: context,
-      builder: (ctx) => CupertinoActionSheet(
-        title: Text(dreamTitle(dream, en)),
-        actions: [
-          for (final (id, label) in [
-            ('open', tr(en, 'Открыть сон', 'Open dream')),
-            (
-              'favorite',
-              dream.favorite
-                  ? tr(en, 'Убрать из избранного', 'Remove from favorites')
-                  : tr(en, 'В избранное', 'Add to favorites'),
-            ),
-            ('connections', tr(en, 'Показать связи', 'Show connections')),
-          ])
-            CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(ctx, id),
-              child: Text(label),
-            ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: Text(tr(en, 'Отмена', 'Cancel')),
+    final action = await dreamActionSheet(
+      context,
+      title: dreamTitle(dream, en),
+      actions: [
+        ('open', tr(en, 'Открыть сон', 'Open dream')),
+        (
+          'favorite',
+          dream.favorite
+              ? tr(en, 'Убрать из избранного', 'Remove from favorites')
+              : tr(en, 'В избранное', 'Add to favorites'),
         ),
-      ),
+        ('connections', tr(en, 'Показать связи', 'Show connections')),
+      ],
+      cancelLabel: tr(en, 'Отмена', 'Cancel'),
     );
     if (!mounted) return;
     switch (action) {
@@ -403,14 +367,17 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: JournalGlass(
+                    floating: true,
                     child: Row(
                       children: [
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 14),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
                           child: Icon(
                             CupertinoIcons.search,
                             size: 20,
-                            color: Palette.secondary,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         Expanded(
@@ -466,6 +433,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                           JournalIconButton(
                             label: tr(en, 'Очистить поиск', 'Clear search'),
                             icon: CupertinoIcons.xmark_circle_fill,
+                            glass: false,
                             onPressed: () {
                               searchTimer?.cancel();
                               search.clear();
@@ -483,8 +451,8 @@ class _MapScreenState extends ConsumerState<MapScreen>
                 const SizedBox(height: 8),
                 SizedBox(
                   height: math.max(
-                    44,
-                    MediaQuery.textScalerOf(context).scale(14) + 22,
+                    48,
+                    MediaQuery.textScalerOf(context).scale(14) + 28,
                   ),
                   child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -820,13 +788,16 @@ class _MapScreenState extends ConsumerState<MapScreen>
                             'Every dream is part of something bigger',
                           ),
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: Palette.secondary,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       )
                     : JournalGlass(
+                        floating: true,
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
                           child: Column(
@@ -845,6 +816,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                   JournalIconButton(
                                     label: tr(en, 'Закрыть', 'Close'),
                                     icon: CupertinoIcons.xmark,
+                                    glass: false,
                                     onPressed: () =>
                                         setState(() => selected = null),
                                   ),
@@ -854,9 +826,11 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                 alignment: Alignment.centerLeft,
                                 child: Text(
                                   '${formatDate(current.date, en)} · ${current.type.label(en)}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 11,
-                                    color: Palette.secondary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ),

@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../core/design.dart';
+import '../../core/native_glass.dart';
+import '../../core/native_presentations.dart';
 import '../../data/providers.dart';
 import '../../models/dream.dart';
 import 'journal_components.dart';
@@ -62,6 +64,32 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
 
   Future<void> options(bool en) async {
     FocusScope.of(context).unfocus();
+    if (usesNativeGlass) {
+      final result = await nativePresentations.invokeMapMethod<String, dynamic>(
+        'filters',
+        {
+          ...presentationStyle(context),
+          'oldest': oldest,
+          'moods': [
+            tr(en, 'Любое', 'Any'),
+            ...Mood.values.map((m) => m.label(en)),
+          ],
+          'moodIndex': Mood.values.indexWhere((m) => m.name == mood) + 1,
+          'categories': labels(en),
+          'categoryIndex': filter,
+        },
+      );
+      if (!mounted || result == null) return;
+      final moodIndex = result['moodIndex'] as int;
+      setState(() {
+        oldest = result['oldest'] as bool;
+        filter = result['categoryIndex'] as int;
+        mood = moodIndex > 0 && moodIndex <= Mood.values.length
+            ? Mood.values[moodIndex - 1].name
+            : null;
+      });
+      return;
+    }
     var selectedMood = mood, selectedFilter = filter;
     var ascending = oldest;
     final apply = await showCupertinoModalPopup<bool>(
@@ -311,22 +339,28 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                           'Воспоминания с другой стороны ночи',
                           'Memories from the other side of night',
                         ),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: Palette.secondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 22),
                       JournalGlass(
                         radius: 26,
+                        floating: true,
                         child: Row(
                           children: [
-                            const Padding(
-                              padding: EdgeInsets.only(left: 14, right: 10),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 14,
+                                right: 10,
+                              ),
                               child: Icon(
                                 CupertinoIcons.search,
                                 size: 20,
-                                color: Palette.secondary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                             Expanded(
@@ -348,9 +382,11 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                                     'Поиск снов, мест, символов...',
                                     'Search dreams, places, symbols...',
                                   ),
-                                  hintStyle: const TextStyle(
+                                  hintStyle: TextStyle(
                                     fontSize: 13,
-                                    color: Palette.secondary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                   filled: false,
                                   border: InputBorder.none,
@@ -366,6 +402,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                               JournalIconButton(
                                 label: tr(en, 'Очистить поиск', 'Clear search'),
                                 icon: CupertinoIcons.xmark_circle_fill,
+                                glass: false,
                                 onPressed: () {
                                   search.clear();
                                   setState(() => query = '');
@@ -378,6 +415,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                                 'Journal options',
                               ),
                               icon: CupertinoIcons.slider_horizontal_3,
+                              glass: false,
                               onPressed: () => options(en),
                             ),
                           ],
@@ -390,8 +428,8 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                 SliverToBoxAdapter(
                   child: SizedBox(
                     height: math.max(
-                      44,
-                      MediaQuery.textScalerOf(context).scale(14) + 24,
+                      48,
+                      MediaQuery.textScalerOf(context).scale(14) + 28,
                     ),
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
@@ -462,10 +500,12 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                               ),
                               Text(
                                 journalCount(entry.value.length, en),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 11,
-                                  color: Palette.secondary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -474,7 +514,9 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                                     ? CupertinoIcons.chevron_down
                                     : CupertinoIcons.chevron_up,
                                 size: 15,
-                                color: Palette.secondary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ],
                           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import '../../core/native_presentations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -61,7 +62,9 @@ class DetailScreen extends ConsumerWidget {
         children: [
           Text(
             formatDate(dream.date, en),
-            style: const TextStyle(color: Palette.secondary),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 18),
           Text(dreamTitle(dream, en), style: display(34)),
@@ -143,27 +146,16 @@ class DetailScreen extends ConsumerWidget {
     Dream dream,
     bool en,
   ) async {
-    final action = await showCupertinoModalPopup<String>(
-      context: context,
-      builder: (ctx) => CupertinoActionSheet(
-        title: Text(dreamTitle(dream, en)),
-        actions: [
-          for (final (value, title) in [
-            ('edit', tr(en, 'Редактировать', 'Edit')),
-            ('share', tr(en, 'Поделиться', 'Share')),
-            ('delete', tr(en, 'Удалить сон', 'Delete Dream')),
-          ])
-            CupertinoActionSheetAction(
-              isDestructiveAction: value == 'delete',
-              onPressed: () => Navigator.pop(ctx, value),
-              child: Text(title),
-            ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: Text(tr(en, 'Отмена', 'Cancel')),
-        ),
-      ),
+    final action = await dreamActionSheet(
+      context,
+      title: dreamTitle(dream, en),
+      actions: [
+        ('edit', tr(en, 'Редактировать', 'Edit')),
+        ('share', tr(en, 'Поделиться', 'Share')),
+        ('delete', tr(en, 'Удалить сон', 'Delete Dream')),
+      ],
+      cancelLabel: tr(en, 'Отмена', 'Cancel'),
+      destructive: const {'delete'},
     );
     if (!context.mounted || action == null) return;
     if (action == 'edit') context.push('/record?id=$id');

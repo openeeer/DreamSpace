@@ -101,10 +101,12 @@ class ProfileScreen extends ConsumerWidget {
                                       'Здесь живут твои сны\nи самые смелые идеи',
                                       'Your dreams and boldest\nideas live here',
                                     ),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
                                       height: 1.35,
-                                      color: Palette.secondary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -124,11 +126,13 @@ class ProfileScreen extends ConsumerWidget {
                                   ? 'DreamSpace'
                                   : '${tr(en, 'В DreamSpace с', 'Dreamer since')} ${formatDate(joined, en)}',
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
                                 letterSpacing: 1,
                                 height: 1.4,
-                                color: Palette.secondary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -182,19 +186,15 @@ class DreamGlassIconButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => JournalGlass(
     radius: 28,
-    child: SizedBox(
-      width: 50,
-      height: 50,
-      child: JournalIconButton(
-        label: tr(en, 'Настройки', 'Settings'),
-        icon: CupertinoIcons.gear,
-        onPressed: () {
-          if (ref.read(settingsProvider)['haptics'] != 'false') {
-            HapticFeedback.selectionClick();
-          }
-          context.push('/settings');
-        },
-      ),
+    child: JournalIconButton(
+      label: tr(en, 'Настройки', 'Settings'),
+      icon: CupertinoIcons.gear,
+      onPressed: () {
+        if (ref.read(settingsProvider)['haptics'] != 'false') {
+          HapticFeedback.selectionClick();
+        }
+        context.push('/settings');
+      },
     ),
   );
 }
@@ -257,10 +257,10 @@ class DreamStatsPanel extends StatelessWidget {
                           tr(en, 'ОСОЗНАННЫХ', 'LUCID'),
                         ][i],
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 9,
                           letterSpacing: .9,
-                          color: Palette.secondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -393,11 +393,11 @@ class DreamProfileMenuItem extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 11,
                   height: 1.35,
-                  color: Palette.secondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -432,7 +432,7 @@ class DreamPrivacyQuote extends StatelessWidget {
             textAlign: TextAlign.center,
             style: display(13).copyWith(
               fontStyle: FontStyle.italic,
-              color: Palette.secondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               height: 1.65,
             ),
           ),

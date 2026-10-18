@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'design.dart';
+import 'native_glass.dart';
 
 /// UIKit owns the material and controls on iOS; Flutter owns navigation state.
 class DreamTabBar extends StatefulWidget {
@@ -25,6 +26,7 @@ class DreamTabBar extends StatefulWidget {
 
 class _DreamTabBarState extends State<DreamTabBar> {
   MethodChannel? channel;
+  double? nativeHeight;
 
   Map<String, Object> get configuration => {
     'index': widget.index,
@@ -53,9 +55,9 @@ class _DreamTabBarState extends State<DreamTabBar> {
 
   @override
   Widget build(BuildContext context) {
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+    if (usesNativeGlass) {
       return SizedBox(
-        height: 76,
+        height: nativeHeight ?? 84 + MediaQuery.viewPaddingOf(context).bottom,
         child: UiKitView(
           gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
             Factory<EagerGestureRecognizer>(EagerGestureRecognizer.new),
@@ -64,10 +66,21 @@ class _DreamTabBarState extends State<DreamTabBar> {
           creationParams: configuration,
           creationParamsCodec: const StandardMessageCodec(),
           onPlatformViewCreated: (id) {
+            if (!mounted) return;
             channel = MethodChannel('dreamspace/native-tabs/$id');
             channel!.setMethodCallHandler((call) async {
               if (mounted && call.method == 'select' && call.arguments is int) {
                 widget.onSelected(call.arguments as int);
+              } else if (mounted &&
+                  call.method == 'height' &&
+                  call.arguments is num) {
+                final height = (call.arguments as num).toDouble();
+                if (height.isFinite &&
+                    height >= 44 &&
+                    height <= 180 &&
+                    height != nativeHeight) {
+                  setState(() => nativeHeight = height);
+                }
               }
             });
             channel!.invokeMethod<void>('update', configuration);

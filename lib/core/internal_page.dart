@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../data/providers.dart';
 import 'design.dart';
+import 'native_glass.dart';
+import 'native_presentations.dart';
 
 abstract final class InternalStyle {
   static const gutter = 22.0, radius = 28.0, maxWidth = 620.0;
@@ -57,8 +58,8 @@ class DreamGlassSurface extends ConsumerWidget {
           end: Alignment.bottomRight,
           colors: light
               ? [
-                  Colors.white.withValues(alpha: opaque ? 1 : .88),
-                  const Color(0xffe6e1f5).withValues(alpha: opaque ? 1 : .83),
+                  Colors.white.withValues(alpha: opaque ? 1 : .96),
+                  const Color(0xffe6e1f5).withValues(alpha: opaque ? 1 : .94),
                 ]
               : [
                   (selected ? const Color(0xff6952b1) : Palette.raised)
@@ -67,9 +68,9 @@ class DreamGlassSurface extends ConsumerWidget {
                             ? 1
                             : selected
                             ? .68
-                            : .48,
+                            : .94,
                       ),
-                  Palette.surface.withValues(alpha: opaque ? 1 : .38),
+                  Palette.surface.withValues(alpha: opaque ? 1 : .92),
                 ],
         ),
         border: Border.all(
@@ -78,21 +79,24 @@ class DreamGlassSurface extends ConsumerWidget {
                 ? .65
                 : selected
                 ? .75
-                : .32,
+                : .14,
           ),
           width: .8,
         ),
       ),
       child: Padding(padding: padding, child: child),
     );
-    // One blur per panel; bubbles and switches only tint their existing surface.
-    if (!opaque) {
-      content = BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-        child: content,
+    final floating =
+        preset == DreamGlass.navigation || preset == DreamGlass.modal;
+    if (usesNativeGlass && floating) {
+      content = NativeGlassBackdrop(
+        radius: radius,
+        child: Padding(padding: padding, child: child),
       );
     }
-    content = ClipRRect(borderRadius: border, child: content);
+    if (!floating || !usesNativeGlass) {
+      content = ClipRRect(borderRadius: border, child: content);
+    }
     if (onTap != null) {
       content = CupertinoButton(
         padding: EdgeInsets.zero,
@@ -126,42 +130,57 @@ class DreamGlassAction extends ConsumerWidget {
   final IconData? icon;
   final bool prominent;
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Tooltip(
-    message: label,
-    child: Opacity(
-      opacity: onPressed == null ? .45 : 1,
-      child: DreamGlassSurface(
-        padding: EdgeInsets.zero,
-        radius: 25,
-        preset: prominent ? DreamGlass.selected : DreamGlass.control,
-        child: CupertinoButton(
-          padding: icon == null
-              ? const EdgeInsets.symmetric(horizontal: 15, vertical: 12)
-              : EdgeInsets.zero,
-          minimumSize: const Size(48, 48),
-          onPressed: onPressed == null
-              ? null
-              : () {
-                  dreamSelection(ref);
-                  onPressed!();
-                },
-          child: icon == null
-              ? Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (usesNativeGlass) {
+      return NativeGlassButton(
+        label: label,
+        icon: icon,
+        prominent: prominent,
+        onPressed: onPressed == null
+            ? null
+            : () {
+                dreamSelection(ref);
+                onPressed!();
+              },
+      );
+    }
+    return Tooltip(
+      message: label,
+      child: Opacity(
+        opacity: onPressed == null ? .45 : 1,
+        child: DreamGlassSurface(
+          padding: EdgeInsets.zero,
+          radius: 25,
+          preset: prominent ? DreamGlass.selected : DreamGlass.control,
+          child: CupertinoButton(
+            padding: icon == null
+                ? const EdgeInsets.symmetric(horizontal: 15, vertical: 12)
+                : EdgeInsets.zero,
+            minimumSize: const Size(48, 48),
+            onPressed: onPressed == null
+                ? null
+                : () {
+                    dreamSelection(ref);
+                    onPressed!();
+                  },
+            child: icon == null
+                ? Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  )
+                : Icon(
+                    icon,
+                    size: 22,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
-                )
-              : Icon(
-                  icon,
-                  size: 22,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class DreamInternalHeader extends StatelessWidget {
@@ -212,14 +231,17 @@ class DreamInternalHeader extends StatelessWidget {
                 : 40,
           ),
         );
-        if (large || actions.length > 1) {
+        if (large || (c.maxWidth < 350 && actions.length > 1)) {
           return Column(
             children: [
               Row(
                 children: [
                   back,
                   const Spacer(),
-                  for (final action in actions) Flexible(child: action),
+                  for (final action in actions) ...[
+                    const SizedBox(width: 8),
+                    Flexible(child: action),
+                  ],
                 ],
               ),
               const SizedBox(height: 12),
@@ -227,19 +249,29 @@ class DreamInternalHeader extends StatelessWidget {
             ],
           );
         }
-        final side = actions.isEmpty ? 52.0 : actions.length * 52.0;
+        if (actions.isNotEmpty) {
+          return Row(
+            children: [
+              back,
+              const SizedBox(width: 12),
+              Expanded(child: titleWidget),
+              const SizedBox(width: 12),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 8,
+                children: actions,
+              ),
+            ],
+          );
+        }
         return Stack(
           alignment: Alignment.center,
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: side + 6),
+              padding: const EdgeInsets.symmetric(horizontal: 58),
               child: titleWidget,
             ),
             Align(alignment: Alignment.centerLeft, child: back),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Row(mainAxisSize: MainAxisSize.min, children: actions),
-            ),
           ],
         );
       },
@@ -560,6 +592,23 @@ class DreamGlassSwitch extends ConsumerWidget {
   final String label;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (usesNativeGlass) {
+      return NativeGlassControl(
+        kind: 'switch',
+        properties: {
+          'label': label,
+          'value': value,
+          'enabled': onChanged != null,
+        },
+        sizingChild: const SizedBox(width: 58, height: 48),
+        onChanged: (next) {
+          if (onChanged != null && next is bool) {
+            dreamSelection(ref);
+            onChanged!(next);
+          }
+        },
+      );
+    }
     final reduced =
         ref.watch(settingsProvider)['animations'] == 'reduced' ||
         MediaQuery.disableAnimationsOf(context);
@@ -623,80 +672,146 @@ class DreamSegmentedControl<T> extends ConsumerWidget {
   final Map<T, String> options;
   final ValueChanged<T>? onChanged;
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Wrap(
-    spacing: 8,
-    runSpacing: 8,
-    children: [
-      for (final entry in options.entries)
-        Semantics(
-          selected: entry.key == value,
-          child: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: onChanged == null
-                ? null
-                : () {
-                    dreamSelection(ref);
-                    onChanged!(entry.key);
-                  },
-            child: AnimatedContainer(
-              duration: Duration(
-                milliseconds:
-                    MediaQuery.disableAnimationsOf(context) ||
-                        ref.watch(settingsProvider)['animations'] == 'reduced'
-                    ? 0
-                    : 200,
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (usesNativeGlass) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final labels = options.values.toList();
+          final keys = options.keys.toList();
+          final scale = MediaQuery.textScalerOf(context);
+          var longest = 0.0;
+          for (final label in labels) {
+            final painter = TextPainter(
+              text: TextSpan(
+                text: label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              constraints: const BoxConstraints(minHeight: 44),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(22),
-                color: InternalStyle.accent(
-                  context,
-                ).withValues(alpha: entry.key == value ? .28 : .05),
-                border: Border.all(
+              textDirection: Directionality.of(context),
+              textScaler: scale,
+            )..layout();
+            if (painter.width > longest) longest = painter.width;
+            painter.dispose();
+          }
+          // System segments cannot wrap. At accessibility sizes, use wrapping
+          // native choices so neither translations nor large type get truncated.
+          if ((longest + 28) * labels.length <= constraints.maxWidth) {
+            return NativeGlassControl(
+              kind: 'segments',
+              properties: {
+                'labels': labels,
+                'index': keys.indexOf(value),
+                'enabled': onChanged != null,
+              },
+              sizingChild: SizedBox(
+                width: constraints.maxWidth,
+                height: scale.scale(14) + 28,
+              ),
+              onChanged: (next) {
+                if (onChanged != null &&
+                    next is int &&
+                    next >= 0 &&
+                    next < keys.length) {
+                  dreamSelection(ref);
+                  onChanged!(keys[next]);
+                }
+              },
+            );
+          }
+          return Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final entry in options.entries)
+                NativeGlassButton(
+                  label: entry.value,
+                  selected: entry.key == value,
+                  prominent: entry.key == value,
+                  onPressed: onChanged == null
+                      ? null
+                      : () {
+                          dreamSelection(ref);
+                          onChanged!(entry.key);
+                        },
+                ),
+            ],
+          );
+        },
+      );
+    }
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final entry in options.entries)
+          Semantics(
+            selected: entry.key == value,
+            child: CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: onChanged == null
+                  ? null
+                  : () {
+                      dreamSelection(ref);
+                      onChanged!(entry.key);
+                    },
+              child: AnimatedContainer(
+                duration: Duration(
+                  milliseconds:
+                      MediaQuery.disableAnimationsOf(context) ||
+                          ref.watch(settingsProvider)['animations'] == 'reduced'
+                      ? 0
+                      : 200,
+                ),
+                constraints: const BoxConstraints(minHeight: 44),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
                   color: InternalStyle.accent(
                     context,
-                  ).withValues(alpha: entry.key == value ? .85 : .25),
+                  ).withValues(alpha: entry.key == value ? .28 : .05),
+                  border: Border.all(
+                    color: InternalStyle.accent(
+                      context,
+                    ).withValues(alpha: entry.key == value ? .85 : .25),
+                  ),
+                  boxShadow: entry.key == value
+                      ? [
+                          BoxShadow(
+                            color: InternalStyle.accent(
+                              context,
+                            ).withValues(alpha: .13),
+                            blurRadius: 12,
+                          ),
+                        ]
+                      : [],
                 ),
-                boxShadow: entry.key == value
-                    ? [
-                        BoxShadow(
-                          color: InternalStyle.accent(
-                            context,
-                          ).withValues(alpha: .13),
-                          blurRadius: 12,
-                        ),
-                      ]
-                    : [],
-              ),
-              child: Text(
-                entry.value,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: Theme.of(context).colorScheme.onSurface,
+                child: Text(
+                  entry.value,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 Future<void> dreamNotice(BuildContext context, String title, String message) =>
-    showCupertinoDialog<void>(
-      context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(MaterialLocalizations.of(ctx).okButtonLabel),
-          ),
-        ],
-      ),
+    dreamAlert(
+      context,
+      title: title,
+      message: message,
+      closeLabel: MaterialLocalizations.of(context).okButtonLabel,
     );
 
 Future<DateTime?> dreamDatePicker(
@@ -706,6 +821,17 @@ Future<DateTime?> dreamDatePicker(
   CupertinoDatePickerMode mode = CupertinoDatePickerMode.dateAndTime,
   DateTime? maximumDate,
 }) async {
+  if (usesNativeGlass) {
+    final selected = await nativePresentations.invokeMethod<int>('date', {
+      ...presentationStyle(context),
+      'initial': initial.millisecondsSinceEpoch,
+      'mode': mode.name,
+      if (maximumDate != null) 'maximum': maximumDate.millisecondsSinceEpoch,
+    });
+    return selected == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(selected);
+  }
   var selected = initial;
   return showCupertinoModalPopup<DateTime>(
     context: context,

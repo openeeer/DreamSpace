@@ -75,6 +75,16 @@
 
 > A very quiet airy glass resonance suggesting a small constellation opening, one soft ascending shimmer with a smooth fade, elegant and restrained, 0.7 seconds, no orchestral swell, no voice, no loop, no background noise, export dry mono WAV.
 
+## Фон холодного запуска · 18 октября 2026
+
+Готовый ассет: `assets/launch/background.png`, 1024×1536. Создан встроенным imagegen;
+та же картинка включена в `ios/Runner/Assets.xcassets/LaunchBackground.imageset`.
+Полумесяц рисуется кодом, его начальный кадр экспортирован в LaunchMoon.imageset.
+
+Точный промпт генерации:
+
+> Use case: stylized-concept. Asset type: production background for the DreamSpace mobile app launch screen. Create ONE portrait image, approximately 1024 x 1536. A serene very dark midnight-indigo night sky, delicate cinematic lavender-blue cosmic mist concentrated along the bottom quarter and faintly at the far edges, a few tiny distant stars. The middle 60 percent is almost empty deep midnight navy (#070B1E), providing quiet negative space for a tiny animated crescent moon that will be drawn in code. Sophisticated, restrained, dreamy, soft organic cloud texture, smooth dark tonal transitions, no bright center. The image must work with a centered aspect-fill crop in both portrait and landscape. No moon, no planets, no text, no typography, no logo, no frame, no UI, no bright purple neon. Opaque background.
+
 ## Генерировать не нужно
 
 - Текст, интерфейс, кнопки, стеклянные панели, градиенты, звёзды и линии карты.

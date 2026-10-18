@@ -1,12 +1,13 @@
 import 'dart:math' as math;
-import 'dart:ui';
 import 'package:flutter/cupertino.dart';
+import '../../core/native_presentations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/design.dart';
+import '../../core/native_glass.dart';
 import '../../data/providers.dart';
 import '../../models/dream.dart';
 
@@ -16,12 +17,25 @@ class JournalGlass extends ConsumerWidget {
     required this.child,
     this.radius = 24,
     this.accent = false,
+    this.floating = false,
   });
   final Widget child;
   final double radius;
   final bool accent;
+  final bool floating;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (usesNativeGlass) {
+      if (child case final JournalIconButton button) {
+        return NativeGlassButton(
+          label: button.label,
+          icon: button.icon,
+          prominent: accent,
+          onPressed: button.onPressed,
+        );
+      }
+      if (floating) return NativeGlassBackdrop(radius: radius, child: child);
+    }
     final light = Theme.of(context).brightness == Brightness.light;
     final opaque =
         ref.watch(settingsProvider)['opaque'] == 'true' ||
@@ -35,14 +49,14 @@ class JournalGlass extends ConsumerWidget {
           colors: accent
               ? [const Color(0xaaab8bf6), const Color(0x776e57bd)]
               : light
-              ? [const Color(0xeef5f2fc), const Color(0xccdfdaee)]
+              ? [const Color(0xfff5f2fc), const Color(0xffe9e5f3)]
               : [
-                  Color(opaque ? 0xff171c3c : 0x66171c3c),
-                  Color(opaque ? 0xff0e142f : 0x440e142f),
+                  Color(opaque ? 0xff171c3c : 0xf0171c3c),
+                  Color(opaque ? 0xff0e142f : 0xec0e142f),
                 ],
         ),
         border: Border.all(
-          color: Palette.lavender.withValues(alpha: accent ? .65 : .24),
+          color: Palette.lavender.withValues(alpha: accent ? .65 : .14),
           width: .7,
         ),
       ),
@@ -50,12 +64,7 @@ class JournalGlass extends ConsumerWidget {
     );
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
-      child: opaque
-          ? surface
-          : BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: surface,
-            ),
+      child: surface,
     );
   }
 }
@@ -66,25 +75,37 @@ class JournalIconButton extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.onPressed,
+    this.glass = true,
   });
   final String label;
   final IconData icon;
   final VoidCallback? onPressed;
+  final bool glass;
   @override
-  Widget build(BuildContext context) => Tooltip(
-    message: label,
-    child: CupertinoButton(
-      padding: EdgeInsets.zero,
-      minimumSize: const Size(44, 44),
-      onPressed: onPressed,
-      child: Icon(
-        icon,
-        size: 21,
-        semanticLabel: label,
-        color: Theme.of(context).colorScheme.onSurface,
+  Widget build(BuildContext context) {
+    if (usesNativeGlass && nativeSymbol(icon) != null) {
+      return NativeGlassButton(
+        label: label,
+        icon: icon,
+        onPressed: onPressed,
+        glass: glass,
+      );
+    }
+    return Tooltip(
+      message: label,
+      child: CupertinoButton(
+        padding: EdgeInsets.zero,
+        minimumSize: const Size(44, 44),
+        onPressed: onPressed,
+        child: Icon(
+          icon,
+          size: 21,
+          semanticLabel: label,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class JournalFilter extends ConsumerWidget {
@@ -99,6 +120,18 @@ class JournalFilter extends ConsumerWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (usesNativeGlass) {
+      return NativeGlassButton(
+        label: label,
+        selected: selected,
+        onPressed: () {
+          if (ref.read(settingsProvider)['haptics'] != 'false') {
+            HapticFeedback.selectionClick();
+          }
+          onTap();
+        },
+      );
+    }
     final reduced =
         MediaQuery.disableAnimationsOf(context) ||
         ref.watch(settingsProvider)['animations'] == 'reduced';
@@ -173,55 +206,35 @@ class _DreamJournalCardState extends ConsumerState<DreamJournalCard> {
     }
   }
 
-  Future<void> failure() => showCupertinoDialog<void>(
-    context: context,
-    builder: (ctx) => CupertinoAlertDialog(
-      title: Text(
-        tr(
-          widget.en,
-          'Не удалось выполнить действие',
-          'Could not complete action',
-        ),
-      ),
-      content: Text(tr(widget.en, 'Попробуй ещё раз.', 'Please try again.')),
-      actions: [
-        CupertinoDialogAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: Text(tr(widget.en, 'Закрыть', 'Close')),
-        ),
-      ],
+  Future<void> failure() => dreamAlert(
+    context,
+    title: tr(
+      widget.en,
+      'Не удалось выполнить действие',
+      'Could not complete action',
     ),
+    message: tr(widget.en, 'Попробуй ещё раз.', 'Please try again.'),
+    closeLabel: tr(widget.en, 'Закрыть', 'Close'),
   );
 
   Future<void> menu() async {
     final en = widget.en, dream = widget.dream;
-    final action = await showCupertinoModalPopup<String>(
-      context: context,
-      builder: (ctx) => CupertinoActionSheet(
-        title: Text(dreamTitle(dream, en)),
-        actions: [
-          for (final (id, label) in [
-            ('edit', tr(en, 'Редактировать', 'Edit')),
-            (
-              'favorite',
-              dream.favorite
-                  ? tr(en, 'Убрать из избранного', 'Remove from favorites')
-                  : tr(en, 'В избранное', 'Add to favorites'),
-            ),
-            ('share', tr(en, 'Поделиться', 'Share')),
-            ('delete', tr(en, 'Удалить', 'Delete')),
-          ])
-            CupertinoActionSheetAction(
-              isDestructiveAction: id == 'delete',
-              onPressed: () => Navigator.pop(ctx, id),
-              child: Text(label),
-            ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(ctx),
-          child: Text(tr(en, 'Отмена', 'Cancel')),
+    final action = await dreamActionSheet(
+      context,
+      title: dreamTitle(dream, en),
+      actions: [
+        ('edit', tr(en, 'Редактировать', 'Edit')),
+        (
+          'favorite',
+          dream.favorite
+              ? tr(en, 'Убрать из избранного', 'Remove from favorites')
+              : tr(en, 'В избранное', 'Add to favorites'),
         ),
-      ),
+        ('share', tr(en, 'Поделиться', 'Share')),
+        ('delete', tr(en, 'Удалить', 'Delete')),
+      ],
+      cancelLabel: tr(en, 'Отмена', 'Cancel'),
+      destructive: const {'delete'},
     );
     if (!mounted || action == null) return;
     try {
@@ -396,14 +409,18 @@ class _DreamJournalCardState extends ConsumerState<DreamJournalCard> {
                               const SizedBox(width: 4),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xbb171b38),
+                                  color: usesNativeGlass
+                                      ? Colors.transparent
+                                      : const Color(0xbb171b38),
                                   borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: Palette.lavender.withValues(
-                                      alpha: .18,
-                                    ),
-                                    width: .6,
-                                  ),
+                                  border: usesNativeGlass
+                                      ? null
+                                      : Border.all(
+                                          color: Palette.lavender.withValues(
+                                            alpha: .18,
+                                          ),
+                                          width: .6,
+                                        ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -411,7 +428,10 @@ class _DreamJournalCardState extends ConsumerState<DreamJournalCard> {
                                     TweenAnimationBuilder<double>(
                                       key: ValueKey(dream.favorite),
                                       tween: Tween(
-                                        begin: dream.favorite && !reduced
+                                        begin:
+                                            dream.favorite &&
+                                                !reduced &&
+                                                !usesNativeGlass
                                             ? 1.18
                                             : 1,
                                         end: 1,

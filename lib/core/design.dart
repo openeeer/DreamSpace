@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
+import 'native_presentations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../data/providers.dart';
 import '../models/dream.dart';
+import 'native_glass.dart';
 
 abstract final class Palette {
   static const night = Color(0xff070b1e),
@@ -354,58 +356,77 @@ class DreamButton extends ConsumerWidget {
   final IconData icon;
   final bool busy;
   @override
-  Widget build(BuildContext context, WidgetRef ref) => DecoratedBox(
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(30),
-      gradient: const LinearGradient(
-        colors: [Color(0xff6652b8), Color(0xff4356aa)],
-      ),
-      border: Border.all(
-        color: Palette.lavender.withValues(alpha: .65),
-        width: .8,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: Palette.lavender.withValues(alpha: .17),
-          blurRadius: 23,
-          spreadRadius: 1,
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (usesNativeGlass) {
+      return NativeGlassButton(
+        label: label,
+        icon: icon,
+        showIconLabel: true,
+        prominent: true,
+        busy: busy,
+        onPressed: busy || onPressed == null
+            ? null
+            : () {
+                if (ref.read(settingsProvider)['haptics'] != 'false') {
+                  HapticFeedback.lightImpact();
+                }
+                onPressed!();
+              },
+      );
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        gradient: const LinearGradient(
+          colors: [Color(0xff6652b8), Color(0xff4356aa)],
         ),
-      ],
-    ),
-    child: CupertinoButton(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      onPressed: busy
-          ? null
-          : onPressed == null
-          ? null
-          : () {
-              if (ref.read(settingsProvider)['haptics'] != 'false') {
-                HapticFeedback.lightImpact();
-              }
-              onPressed!();
-            },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (busy)
-            const CupertinoActivityIndicator(color: Colors.white)
-          else
-            Icon(icon, color: Palette.text, size: 21),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Palette.text,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+        border: Border.all(
+          color: Palette.lavender.withValues(alpha: .65),
+          width: .8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Palette.lavender.withValues(alpha: .17),
+            blurRadius: 23,
+            spreadRadius: 1,
           ),
         ],
       ),
-    ),
-  );
+      child: CupertinoButton(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        onPressed: busy
+            ? null
+            : onPressed == null
+            ? null
+            : () {
+                if (ref.read(settingsProvider)['haptics'] != 'false') {
+                  HapticFeedback.lightImpact();
+                }
+                onPressed!();
+              },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (busy)
+              const CupertinoActivityIndicator(color: Colors.white)
+            else
+              Icon(icon, color: Palette.text, size: 21),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Palette.text,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class DreamPage extends StatelessWidget {
@@ -874,32 +895,21 @@ class DreamCard extends ConsumerWidget {
     if (ref.read(settingsProvider)['haptics'] != 'false') {
       HapticFeedback.selectionClick();
     }
-    final action = await showCupertinoModalPopup<String>(
-      context: context,
-      builder: (sheet) => CupertinoActionSheet(
-        title: Text(dreamTitle(dream, en)),
-        actions: [
-          for (final (value, label) in [
-            ('open', tr(en, 'Открыть сон', 'Open dream')),
-            (
-              'favorite',
-              dream.favorite
-                  ? tr(en, 'Убрать из избранного', 'Remove from favorites')
-                  : tr(en, 'В избранное', 'Add to favorites'),
-            ),
-            ('edit', tr(en, 'Редактировать', 'Edit')),
-            ('map', tr(en, 'Показать на карте', 'Show on map')),
-          ])
-            CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(sheet, value),
-              child: Text(label),
-            ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(sheet),
-          child: Text(tr(en, 'Отмена', 'Cancel')),
+    final action = await dreamActionSheet(
+      context,
+      title: dreamTitle(dream, en),
+      actions: [
+        ('open', tr(en, 'Открыть сон', 'Open dream')),
+        (
+          'favorite',
+          dream.favorite
+              ? tr(en, 'Убрать из избранного', 'Remove from favorites')
+              : tr(en, 'В избранное', 'Add to favorites'),
         ),
-      ),
+        ('edit', tr(en, 'Редактировать', 'Edit')),
+        ('map', tr(en, 'Показать на карте', 'Show on map')),
+      ],
+      cancelLabel: tr(en, 'Отмена', 'Cancel'),
     );
     if (!context.mounted || action == null) return;
     switch (action) {
@@ -1008,23 +1018,34 @@ Future<bool> confirm(
   bool en,
   String title,
   String message,
-) async =>
-    await showCupertinoDialog<bool>(
-      context: context,
-      builder: (ctx) => CupertinoAlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(tr(en, 'Отмена', 'Cancel')),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(tr(en, 'Удалить', 'Delete')),
-          ),
-        ],
-      ),
-    ) ??
-    false;
+) async {
+  if (usesNativeGlass) {
+    return await nativePresentations.invokeMethod<bool>('confirm', {
+          ...presentationStyle(context),
+          'title': title,
+          'message': message,
+          'cancel': tr(en, 'Отмена', 'Cancel'),
+          'accept': tr(en, 'Удалить', 'Delete'),
+        }) ??
+        false;
+  }
+  return await showCupertinoDialog<bool>(
+        context: context,
+        builder: (ctx) => CupertinoAlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(tr(en, 'Отмена', 'Cancel')),
+            ),
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(tr(en, 'Удалить', 'Delete')),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+}
