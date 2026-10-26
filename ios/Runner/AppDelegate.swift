@@ -44,8 +44,8 @@ final class DreamLaunchHaptics: NSObject {
       case "prepare": result(self.prepare())
       case "play":
         let options = call.arguments as? [String: Any] ?? [:]
-        self.play(duration: (options["duration"] as? NSNumber)?.doubleValue ?? 1.65,
-                  reduced: options["reducedMotion"] as? Bool ?? false)
+        self.play(duration: (options["duration"] as? NSNumber)?.doubleValue ?? 1.75,
+                   reduced: options["reducedMotion"] as? Bool ?? false)
         result(nil)
       case "stop": self.stop(); result(nil)
       default: result(FlutterMethodNotImplemented)
@@ -73,34 +73,53 @@ final class DreamLaunchHaptics: NSObject {
     } catch { stop(); return false }
   }
 
+  /// A "dream heartbeat": three soft transient taps land where the crescent
+  /// visibly crosses its fill milestones, and a rounded continuous swell
+  /// breathes underneath them, rising with the water level and fading before
+  /// the final tap. Sharpness stays low so the whole envelope feels organic
+  /// rather than mechanical.
   private func play(duration requested: Double, reduced: Bool) {
     guard requested.isFinite, engine != nil,
           UIApplication.shared.applicationState == .active else { return }
-    let duration = min(2, max(1, requested))
-    func pulse(_ time: Double, _ intensity: Float) -> CHHapticEvent {
+    let duration = min(2.2, max(1, requested))
+    func tap(_ time: Double, _ intensity: Float, sharpness: Float = 0.12) -> CHHapticEvent {
       CHHapticEvent(eventType: .hapticTransient, parameters: [
         CHHapticEventParameter(parameterID: .hapticIntensity, value: intensity),
-        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.08)
+        CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness)
       ], relativeTime: time)
     }
-    var events = [pulse(duration * 0.82, reduced ? 0.14 : 0.23)]
+    // Milestones match the crescent painter: fill begins ~0.09, crests ~0.55,
+    // completes ~0.82 of the launch timeline.
+    var events: [CHHapticEvent] = [
+      tap(duration * 0.10, 0.32),
+      tap(duration * 0.50, 0.46),
+      tap(duration * 0.82, 0.60, sharpness: 0.2)
+    ]
     var curves: [CHHapticParameterCurve] = []
     if !reduced {
-      events.insert(pulse(duration * 0.06, 0.12), at: 0)
+      // Soft heartbeat-echo after the crest, before the final tap.
+      events.append(tap(duration * 0.56, 0.18))
       events.append(CHHapticEvent(eventType: .hapticContinuous, parameters: [
-        CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.30),
-        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.04)
-      ], relativeTime: duration * 0.09, duration: duration * 0.70))
+        CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.0),
+        CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.05)
+      ], relativeTime: duration * 0.12, duration: duration * 0.52))
+      // The swell breathes: in, hold, out — like a sleeping rhythm.
       curves = [CHHapticParameterCurve(parameterID: .hapticIntensityControl, controlPoints: [
         .init(relativeTime: 0, value: 0),
-        .init(relativeTime: duration * 0.12, value: 0.35),
-        .init(relativeTime: duration * 0.38, value: 0.80),
-        .init(relativeTime: duration * 0.62, value: 0.35),
-        .init(relativeTime: duration * 0.70, value: 0),
-        // Restore the multiplier after the continuous event ends so the
-        // final transient at 0.82 is not silenced by the fade-out curve.
-        .init(relativeTime: duration * 0.72, value: 1)
-      ], relativeTime: duration * 0.09)]
+        .init(relativeTime: duration * 0.16, value: 0.42),
+        .init(relativeTime: duration * 0.34, value: 0.50),
+        .init(relativeTime: duration * 0.46, value: 0.28),
+        .init(relativeTime: duration * 0.55, value: 0.16),
+        .init(relativeTime: duration * 0.58, value: 0.0),
+        .init(relativeTime: duration * 0.60, value: 1),
+        .init(relativeTime: duration * 0.66, value: 0.55),
+        .init(relativeTime: duration * 0.76, value: 0.0),
+        .init(relativeTime: duration * 0.78, value: 1)
+      ], relativeTime: duration * 0.12)]
+    } else {
+      // Reduce Motion keeps meaning without the wave: quieter, crisper taps.
+      events = [tap(duration * 0.10, 0.18, sharpness: 0.16),
+                tap(duration * 0.82, 0.26, sharpness: 0.24)]
     }
     do {
       let pattern = try CHHapticPattern(events: events, parameterCurves: curves)

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
+import '../models/character.dart';
 import '../models/dream.dart';
 import 'database.dart';
 import 'demo.dart';
@@ -151,4 +152,209 @@ class DreamRepository {
 
   DreamElement newElement(String name, ElementKind kind) =>
       DreamElement(id: const Uuid().v4(), name: name.trim(), kind: kind);
+
+  // --- Characters -----------------------------------------------------------
+
+  Stream<List<DreamCharacter>> watchCharacters() => db
+      .customSelect(
+        'SELECT id FROM character_rows',
+        readsFrom: {db.characterRows},
+      )
+      .watch()
+      .asyncMap((_) => characters());
+
+  Future<List<DreamCharacter>> characters() async =>
+      (await (db.select(db.characterRows)..orderBy([
+            (t) => OrderingTerm.asc(t.created),
+          ])).get())
+          .map(
+            (r) => DreamCharacter.fromJson(jsonDecode(r.payload) as Map<String, dynamic>),
+          )
+          .toList();
+
+  Future<DreamCharacter?> character(String id) async {
+    final row = await (db.select(
+      db.characterRows,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    return row == null
+        ? null
+        : DreamCharacter.fromJson(jsonDecode(row.payload) as Map<String, dynamic>);
+  }
+
+  Future<DreamCharacter> saveCharacter(DreamCharacter character) async {
+    await db
+        .into(db.characterRows)
+        .insertOnConflictUpdate(
+          CharacterRowsCompanion.insert(
+            id: character.id,
+            payload: jsonEncode(character.toJson()),
+            created: character.createdAt,
+          ),
+        );
+    return character;
+  }
+
+  Future<DreamCharacter> newCharacter(String name, {String? relation}) =>
+      saveCharacter(
+        DreamCharacter(
+          id: const Uuid().v4(),
+          name: name.trim(),
+          relation: relation?.trim(),
+          createdAt: DateTime.now().toUtc(),
+        ),
+      );
+
+  Future<void> deleteCharacter(String id) => (db.delete(
+    db.characterRows,
+  )..where((t) => t.id.equals(id))).go();
+
+  // --- Character matches ----------------------------------------------------
+
+  Stream<List<CharacterMatch>> watchMatches() => db
+      .customSelect(
+        'SELECT dream_id, candidate_id FROM match_rows',
+        readsFrom: {db.matchRows},
+      )
+      .watch()
+      .asyncMap((_) => matches());
+
+  Future<List<CharacterMatch>> matches() async =>
+      (await db.select(db.matchRows).get())
+          .map(
+            (r) => CharacterMatch.fromJson(jsonDecode(r.payload) as Map<String, dynamic>),
+          )
+          .toList();
+
+  Future<List<CharacterMatch>> pendingMatches() async =>
+      (await matches()).where((m) => m.resolved == null).toList();
+
+  Future<void> saveMatch(CharacterMatch match) => db
+      .into(db.matchRows)
+      .insertOnConflictUpdate(
+        MatchRowsCompanion.insert(
+          dreamId: match.dreamId,
+          candidateId: match.candidateId,
+          payload: jsonEncode(match.toJson()),
+        ),
+      );
+
+  /// A retry of the same dream must not resurrect matches the dreamer already
+  /// resolved: the saved verdict wins over a fresh unresolved suggestion.
+  Future<void> saveMatchPreservingVerdict(CharacterMatch match) async {
+    final row = await (db.select(
+      db.matchRows,
+    )..where(
+        (t) =>
+            t.dreamId.equals(match.dreamId) &
+            t.candidateId.equals(match.candidateId),
+      )).getSingleOrNull();
+    if (row == null) {
+      await saveMatch(match);
+      return;
+    }
+    final saved = CharacterMatch.fromJson(
+      jsonDecode(row.payload) as Map<String, dynamic>,
+    );
+    await saveMatch(match.copyWith(resolved: saved.resolved));
+  }
+
+  /// Resolving a match is the only way an assistant suggestion becomes a
+  /// real link. Accept: the character joins the dream's elements (if not
+  /// already there). Reject: a new profile is born instead, ready for the
+  /// dreamer to fill in their own time.
+  Future<DreamCharacter?> resolveMatch(
+    CharacterMatch match,
+    bool accepted,
+  ) async {
+    await saveMatch(match.copyWith(resolved: accepted));
+    if (accepted) {
+      final dreams = await all();
+      final dream = dreams.where((d) => d.id == match.dreamId).firstOrNull;
+      if (dream != null) {
+        final profile = await character(match.candidateId);
+        final alreadyThere = dream.ofKind(ElementKind.character).any(
+          (e) => e.id == match.candidateId || normalize(e.name) == normalize(match.candidateName),
+        );
+        if (!alreadyThere && profile != null) {
+          await save(
+            dream.copyWith(
+              elements: [
+                ...dream.elements,
+                DreamElement(
+                  id: profile.id,
+                  name: profile.name,
+                  kind: ElementKind.character,
+                ),
+              ],
+            ),
+          );
+        }
+      }
+      return null;
+    }
+    // Rejected: spawn a fresh profile from the recognized name so the
+    // dreamer can describe who this actually was.
+    return newCharacter(match.candidateName);
+  }
+
+  /// Server processing results land here: fields the dreamer already set are
+  /// never overwritten, and matches stay unresolved for one-tap review.
+  Future<void> applyProcessing(
+    Dream base,
+    ProcessingResult result,
+  ) => db.transaction(() async {
+    final merged = base.copyWith(
+      mood: result.mood,
+      clearMood: result.mood == null,
+      type: result.type,
+      theme: result.theme,
+      clearTheme: result.theme == null,
+      lucidity: result.lucidity,
+      vividness: result.vividness,
+      artwork: result.artwork,
+      // Every present field is AI-suggested until the dreamer edits it.
+      aiSuggested: true,
+    );
+    await save(merged);
+    final existingElements = {for (final e in base.elements) e.id};
+    final fresh = [
+      for (final element in result.elements)
+        if (!existingElements.contains(element.id)) element,
+    ];
+    if (fresh.isNotEmpty) {
+      await save(merged.copyWith(elements: [...base.elements, ...fresh]));
+    }
+    for (final match in result.matches) {
+      await saveMatchPreservingVerdict(match);
+    }
+  });
+
+  Future<void> setDreamStatus(String dreamId, ProcessingStatus status) async {
+    final dreams = await all();
+    final dream = dreams.where((d) => d.id == dreamId).firstOrNull;
+    if (dream == null) return;
+    await save(dream.copyWith(status: status));
+  }
+}
+
+/// What the server will eventually return for one processed dream. The mock
+/// pipeline produces this; the real one will shape it from an API response.
+class ProcessingResult {
+  const ProcessingResult({
+    required this.elements,
+    this.mood,
+    this.type,
+    this.theme,
+    this.lucidity,
+    this.vividness,
+    this.artwork,
+    this.matches = const [],
+  });
+  final Mood? mood;
+  final DreamType? type;
+  final DreamTheme? theme;
+  final int? lucidity, vividness;
+  final String? artwork;
+  final List<DreamElement> elements;
+  final List<CharacterMatch> matches;
 }

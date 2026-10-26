@@ -19,7 +19,9 @@ class DetailScreen extends ConsumerWidget {
       if (dream == null) {
         return DreamInternalPage(
           title: tr(en, 'Сон не найден', 'Dream not found'),
-          children: const [],
+          children: [
+            EmptyDreams(en: en, notFound: true),
+          ],
         );
       }
       return DreamInternalPage(
@@ -35,7 +37,11 @@ class DetailScreen extends ConsumerWidget {
               colors: [Colors.white, Colors.white, Colors.transparent],
               stops: [0, .65, 1],
             ).createShader(r),
-            child: DreamArtwork(dream.artwork, radius: 0),
+            child: Semantics(
+              label: tr(en, 'Обложка сна', 'Dream artwork'),
+              image: true,
+              child: DreamArtwork(dream.artwork, radius: 0),
+            ),
           ),
         ),
         actions: [
@@ -66,12 +72,12 @@ class DetailScreen extends ConsumerWidget {
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: Rhythm.l),
           Text(dreamTitle(dream, en), style: display(28)),
-          const SizedBox(height: 18),
+          const SizedBox(height: Rhythm.l),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: Rhythm.s,
+            runSpacing: Rhythm.s,
             children: [
               if (dream.mood != null)
                 DreamChip(dream.mood!.label(en), color: moodColor(dream.mood)),
@@ -81,7 +87,7 @@ class DetailScreen extends ConsumerWidget {
               if (dream.demo) DreamChip(tr(en, 'Пример', 'Sample')),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: Rhythm.section),
           DreamGlassSurface(
             child: SelectableText(
               dream.description,
@@ -90,15 +96,15 @@ class DetailScreen extends ConsumerWidget {
           ),
           for (final kind in ElementKind.values)
             if (dream.ofKind(kind).isNotEmpty) ...[
-              const SizedBox(height: 28),
+              const SizedBox(height: Rhythm.section),
               SectionTitle(switch (kind) {
                 ElementKind.symbol => tr(en, 'Символы', 'Symbols'),
                 ElementKind.character => tr(en, 'Персонажи', 'Characters'),
                 ElementKind.place => tr(en, 'Места', 'Places'),
               }),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: Rhythm.s,
+                runSpacing: Rhythm.s,
                 children: [
                   for (final e in dream.ofKind(kind))
                     DreamChip(
@@ -110,16 +116,16 @@ class DetailScreen extends ConsumerWidget {
                 ],
               ),
             ],
-          const SizedBox(height: 24),
+          const SizedBox(height: Rhythm.section),
           DreamGlassSurface(
             child: Column(
               children: [
                 _level(tr(en, 'Осознанность', 'Lucidity'), dream.lucidity, en),
-                const SizedBox(height: 18),
+                const SizedBox(height: Rhythm.l),
                 _level(tr(en, 'Яркость', 'Vividness'), dream.vividness, en),
                 if (dream.theme != null)
                   Padding(
-                    padding: const EdgeInsets.only(top: 20),
+                    padding: const EdgeInsets.only(top: Rhythm.l),
                     child: Row(
                       children: [
                         Expanded(child: Text(tr(en, 'Тема', 'Theme'))),
@@ -130,7 +136,7 @@ class DetailScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: Rhythm.section),
           DreamButton(
             label: tr(en, 'Найти на карте', 'Show on Map'),
             icon: CupertinoIcons.sparkles,

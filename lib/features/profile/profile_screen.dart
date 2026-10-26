@@ -11,7 +11,7 @@ import 'profile_hero.dart';
 
 abstract final class ProfileStyle {
   static const maxWidth = 460.0;
-  static const gutter = 22.0;
+  static const gutter = Rhythm.gutter;
   static const panelRadius = 27.0;
   static const divider = Color(0x26baa6ef);
 }
@@ -90,7 +90,7 @@ class ProfileScreen extends ConsumerWidget {
                                 DreamGlassIconButton(en: en),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: Rhythm.s),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -113,14 +113,14 @@ class ProfileScreen extends ConsumerWidget {
                                 ProfileHandwritten(en: en),
                               ],
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: Rhythm.m),
                             const DreamProfileHero(),
                             Text(
                               tr(en, 'Исследователь снов', 'Dream Explorer'),
                               textAlign: TextAlign.center,
                               style: display(23).copyWith(height: 1.2),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: Rhythm.s),
                             Text(
                               joined == null
                                   ? 'DreamSpace'
@@ -135,16 +135,16 @@ class ProfileScreen extends ConsumerWidget {
                                 ).colorScheme.onSurfaceVariant,
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: Rhythm.section),
                             DreamStatsPanel(
                               total: dreams.length,
                               streak: stats.streak,
                               lucid: stats.lucid,
                               en: en,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: Rhythm.l),
                             DreamProfileMenu(en: en),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: Rhythm.section),
                             DreamPrivacyQuote(en: en),
                           ],
                         ),
@@ -250,19 +250,19 @@ class DreamStatsPanel extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text('${[total, streak, lucid][i]}', style: display(26)),
                       const SizedBox(height: 5),
-                      Text(
-                        [
-                          tr(en, 'СНОВ', 'DREAMS'),
-                          tr(en, 'ДНЕЙ ПОДРЯД', 'DAY STREAK'),
-                          tr(en, 'ОСОЗНАННЫХ', 'LUCID'),
-                        ][i],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 9,
-                          letterSpacing: .9,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
+                       Text(
+                         [
+                           tr(en, 'снов', 'dreams'),
+                           tr(en, 'дней подряд', 'day streak'),
+                           tr(en, 'осознанных', 'lucid'),
+                         ][i],
+                         textAlign: TextAlign.center,
+                         style: TextStyle(
+                           fontSize: 11,
+                           height: 1.3,
+                           color: Theme.of(context).colorScheme.onSurfaceVariant,
+                         ),
+                       ),
                     ],
                   ),
                 ),
@@ -281,6 +281,16 @@ class DreamProfileMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
+      (
+        CupertinoIcons.person_2,
+        tr(en, 'Персонажи снов', 'Dream characters'),
+        tr(
+          en,
+          'Кто приходит в твои сны',
+          'The people who visit your dreams',
+        ),
+        '/characters',
+      ),
       (
         CupertinoIcons.photo,
         tr(en, 'Коллекция образов', 'Dream Elements'),

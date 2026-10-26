@@ -94,6 +94,7 @@ class _DreamTabBarState extends State<DreamTabBar> {
       CupertinoIcons.map,
       CupertinoIcons.person,
     ];
+    final accent = Theme.of(context).colorScheme.primary;
     return DreamSurface(
       glass: true,
       radius: 30,
@@ -107,28 +108,43 @@ class _DreamTabBarState extends State<DreamTabBar> {
                 child: CupertinoButton(
                   padding: EdgeInsets.zero,
                   onPressed: () => widget.onSelected(i),
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutCubic,
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
                       border: widget.index == i
                           ? Border.all(
-                              color: Palette.lavender.withValues(alpha: .35),
+                              color: accent.withValues(alpha: .35),
                               width: .7,
                             )
                           : null,
                       color: widget.index == i
-                          ? Palette.lavender.withValues(alpha: .16)
+                          ? accent.withValues(alpha: .16)
                           : null,
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          icons[i],
-                          size: 25,
-                          color: Theme.of(context).colorScheme.onSurface,
+                        // Selected items take the tint, unselected stay muted —
+                        // the same contrast a native UITabBar draws.
+                        AnimatedScale(
+                          scale: widget.index == i ? 1.08 : 1,
+                          duration: const Duration(milliseconds: 240),
+                          curve: Curves.easeOutBack,
+                          child: Icon(
+                            icons[i],
+                            size: 25,
+                            color: widget.index == i
+                                ? accent
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withValues(
+                                    alpha: .55,
+                                  ),
+                          ),
                         ),
                         const SizedBox(height: 3),
                         Text(
@@ -137,7 +153,16 @@ class _DreamTabBarState extends State<DreamTabBar> {
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 11,
-                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: widget.index == i
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: widget.index == i
+                                ? accent
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withValues(
+                                    alpha: .55,
+                                  ),
                           ),
                         ),
                       ],

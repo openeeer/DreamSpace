@@ -85,11 +85,11 @@ class _DreamLaunchState extends State<DreamLaunch>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController fill = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1650),
+    duration: const Duration(milliseconds: 1750),
   );
   late final AnimationController reveal = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 220),
+    duration: const Duration(milliseconds: 260),
   );
   late final LaunchHaptics haptics = widget.haptics ?? IPhoneLaunchHaptics();
   LaunchDestination? destination;
@@ -175,8 +175,8 @@ class _DreamLaunchState extends State<DreamLaunch>
     preparing = false;
     if (!mounted || !foreground) return;
     started = true;
-    fill.duration = Duration(milliseconds: reduced ? 1200 : 1650);
-    reveal.duration = Duration(milliseconds: reduced ? 180 : 220);
+    fill.duration = Duration(milliseconds: reduced ? 1200 : 1750);
+    reveal.duration = Duration(milliseconds: reduced ? 180 : 260);
     setState(() {});
     // A single native pattern follows the same clock as the visual fill.
     // No timers or per-frame platform messages are used for haptics.
@@ -252,6 +252,7 @@ class _DreamLaunchState extends State<DreamLaunch>
                     value: SystemUiOverlayStyle.light,
                     child: LaunchArtwork(
                       progress: fill,
+                      reveal: reveal,
                       reducedMotion: reduced,
                     ),
                   ),
@@ -306,9 +307,11 @@ class LaunchArtwork extends StatelessWidget {
   const LaunchArtwork({
     super.key,
     required this.progress,
+    this.reveal,
     this.reducedMotion = false,
   });
   final Animation<double> progress;
+  final Animation<double>? reveal;
   final bool reducedMotion;
   @override
   Widget build(BuildContext context) => ColoredBox(
@@ -329,6 +332,7 @@ class LaunchArtwork extends StatelessWidget {
             offset: const Offset(0, 40),
             child: LaunchEmblem(
               progress: progress,
+              reveal: reveal,
               reducedMotion: reducedMotion,
             ),
           ),
@@ -344,9 +348,11 @@ class LaunchEmblem extends StatelessWidget {
   const LaunchEmblem({
     super.key,
     required this.progress,
+    this.reveal,
     this.reducedMotion = false,
   });
   final Animation<double> progress;
+  final Animation<double>? reveal;
   final bool reducedMotion;
 
   @override
@@ -355,50 +361,73 @@ class LaunchEmblem extends StatelessWidget {
     textDirection: TextDirection.ltr,
     child: ExcludeSemantics(
       child: RepaintBoundary(
-        child: SizedBox(
-          width: 280,
-          height: 260,
-          child: Stack(
-            alignment: Alignment.topLeft,
-            children: [
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _LaunchOrbitPainter(progress, reducedMotion),
-                ),
+        child: AnimatedBuilder(
+          animation: Listenable.merge([
+            progress,
+            ?reveal,
+          ]),
+          builder: (context, child) {
+            final revealValue = reveal == null
+                ? 0.0
+                : Curves.easeOutCubic.transform(reveal!.value);
+            // Gentle zoom-dissolve into the app: the emblem grows and lifts
+            // slightly as the night background fades out.
+            final scale =
+                1 + revealValue * (reducedMotion ? 0 : .06);
+            final lift = revealValue * (reducedMotion ? 0 : 12);
+            return Transform.translate(
+              offset: Offset(0, -lift),
+              child: Transform.scale(
+                scale: scale,
+                child: child,
               ),
-              Positioned(
-                left: 102,
-                top: 52,
-                width: 76,
-                height: 76,
-                child: CustomPaint(
-                  painter: CrescentFillPainter(
-                    progress,
-                    reducedMotion: reducedMotion,
+            );
+          },
+          child: SizedBox(
+            width: 280,
+            height: 260,
+            child: Stack(
+              alignment: Alignment.topLeft,
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _LaunchOrbitPainter(progress, reducedMotion),
                   ),
                 ),
-              ),
-              const Positioned(
-                left: 0,
-                right: 0,
-                top: 150,
-                child: Text(
-                  'Dream Space',
-                  textDirection: TextDirection.ltr,
-                  textAlign: TextAlign.center,
-                  textScaler: TextScaler.noScaling,
-                  style: TextStyle(
-                    fontFamily: 'Lora',
-                    fontSize: 28,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 1,
-                    height: 1.25,
-                    color: Color(0xffeee8fc),
-                    decoration: TextDecoration.none,
+                Positioned(
+                  left: 102,
+                  top: 52,
+                  width: 76,
+                  height: 76,
+                  child: CustomPaint(
+                    painter: CrescentFillPainter(
+                      progress,
+                      reducedMotion: reducedMotion,
+                    ),
                   ),
                 ),
-              ),
-            ],
+                const Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 150,
+                  child: Text(
+                    'Dream Space',
+                    textDirection: TextDirection.ltr,
+                    textAlign: TextAlign.center,
+                    textScaler: TextScaler.noScaling,
+                    style: TextStyle(
+                      fontFamily: 'Lora',
+                      fontSize: 28,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 1,
+                      height: 1.25,
+                      color: Color(0xffeee8fc),
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -426,7 +455,9 @@ class _LaunchOrbitPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = .65
-        ..color = lavender.withValues(alpha: .17),
+        ..color = lavender.withValues(
+          alpha: .14 + .06 * Curves.easeOut.transform(progress.value),
+        ),
     );
     if (!reducedMotion && phase > 0) {
       final angle = -.9 + phase * 1.8;
@@ -448,24 +479,38 @@ class _LaunchOrbitPainter extends CustomPainter {
           ),
       );
       final point = Offset(91 * math.cos(angle), 54 * math.sin(angle));
+      // The comet breathes: a slow sine swell instead of a static halo.
+      final breathe = .5 + .5 * math.sin(progress.value * math.pi * 3.1);
       canvas.drawCircle(
         point,
-        5,
+        5 + breathe * 2,
         Paint()
-          ..color = lavender.withValues(alpha: .4)
+          ..color = lavender.withValues(alpha: .28 + .16 * breathe)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
       );
       canvas.drawCircle(point, 1.5, Paint()..color = const Color(0xfff5eddf));
     }
     canvas.restore();
 
-    for (final star in const [
-      (Offset(213, 44), 3.4),
-      (Offset(65, 119), 2.5),
-      (Offset(89, 30), 1.7),
-    ]) {
+    // Stars fade in with a slow, out-of-phase twinkle rather than a static
+    // alpha, so the night sky feels alive while the crescent fills.
+    const stars = [
+      (Offset(213, 44), 3.4, .0),
+      (Offset(65, 119), 2.5, .55),
+      (Offset(89, 30), 1.7, 1.1),
+    ];
+    for (final star in stars) {
+      final twinkle = reducedMotion
+          ? 0.0
+          : .5 +
+                .5 *
+                    math.sin(
+                      progress.value * math.pi * 2.4 + star.$3 * math.pi,
+                    );
       final paint = Paint()
-        ..color = lavender.withValues(alpha: .45 + .15 * phase)
+        ..color = lavender.withValues(
+          alpha: (.45 + .15 * phase) * (reducedMotion ? 1 : .75 + .25 * twinkle),
+        )
         ..strokeWidth = .8
         ..strokeCap = StrokeCap.round;
       canvas.drawLine(

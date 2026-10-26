@@ -49,10 +49,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         body: LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
-            final gutter = width < 370 ? 18.0 : 22.0;
             final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
             final cardHeight =
-                math.max(192.0, (width - gutter * 2) / 2.25) *
+                math.max(192.0, (width - Rhythm.gutter * 2) / 2.25) *
                 math.max(1, scale);
             return Stack(
               children: [
@@ -108,9 +107,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   slivers: [
                     SliverPadding(
                       padding: EdgeInsets.fromLTRB(
-                        gutter,
+                        Rhythm.gutter,
                         MediaQuery.paddingOf(context).top + 20,
-                        gutter,
+                        Rhythm.gutter,
                         MediaQuery.viewPaddingOf(context).bottom + 122,
                       ),
                       sliver: SliverList.list(
@@ -158,7 +157,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: Rhythm.s),
                                 Text(
                                   tr(
                                     en,
@@ -174,21 +173,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         : HomeStyle.muted,
                                   ),
                                 ),
-                                const SizedBox(height: 24),
-                                Text(
-                                  tr(
-                                    en,
-                                    'БЛИЖЕ\nК СВОЕМУ МИРУ',
-                                    'CLOSER\nTO YOUR INNER WORLD',
-                                  ),
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    letterSpacing: 4,
-                                    height: 1.9,
-                                    color: Palette.secondary,
-                                  ),
-                                ),
-                                SizedBox(height: width * .13),
+                                SizedBox(height: width * .1),
                               ],
                             ),
                           ),
@@ -270,7 +255,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                               ),
                             _RecordButton(en: en),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: Rhythm.s),
+                            _DictateButton(en: en),
+                            const SizedBox(height: Rhythm.s),
                             Text(
                               tr(
                                 en,
@@ -284,7 +271,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                             ),
                           ],
-                          const SizedBox(height: 24),
+                          const SizedBox(height: Rhythm.section),
                           _Glass(
                             child: Column(
                               children: [
@@ -293,7 +280,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   en: en,
                                   onTap: () => context.push('/insights'),
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: Rhythm.m),
                                 SingleChildScrollView(
                                   key: const PageStorageKey<String>(
                                     'home-moods',
@@ -340,7 +327,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: Rhythm.l),
                           _Glass(
                             padding: EdgeInsets.zero,
                             child: Stack(
@@ -392,13 +379,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: Rhythm.section),
                           _Heading(
                             tr(en, 'Последние записи', 'Recent dreams'),
                             en: en,
                             onTap: () => context.go('/journal'),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: Rhythm.m),
                           if (recent.isNotEmpty)
                             _Glass(
                               padding: const EdgeInsets.all(6),
@@ -420,7 +407,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ],
                               ),
                             ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: Rhythm.section),
                           _Glass(
                             child: Column(
                               children: [
@@ -817,6 +804,53 @@ class _RecordButton extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DictateButton extends ConsumerWidget {
+  const _DictateButton({required this.en});
+  final bool en;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Secondary to Record: quiet glass pill, mic symbol, same 44pt target.
+    final light = Theme.of(context).brightness == Brightness.light;
+    return _Pressable(
+      label: tr(en, 'Продиктовать', 'Dictate'),
+      onPressed: () {
+        if (ref.read(settingsProvider)['haptics'] != 'false') {
+          HapticFeedback.lightImpact();
+        }
+        context.push('/record/dictate');
+      },
+      child: _Glass(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+        radius: 24,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              CupertinoIcons.waveform,
+              size: 18,
+              color: light
+                  ? Theme.of(context).colorScheme.primary
+                  : Palette.lavender,
+            ),
+            const SizedBox(width: Rhythm.s),
+            Flexible(
+              child: Text(
+                tr(en, 'Продиктовать', 'Dictate'),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: light
+                      ? Theme.of(context).colorScheme.onSurface
+                      : HomeStyle.text,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

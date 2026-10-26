@@ -41,6 +41,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
   int? lucidity, vividness;
   String artwork = artworkIds.first;
   List<DreamElement> elements = [], suggestions = [];
+  List<BedtimeTag> bedtimeTags = [];
   String? error;
   Timer? debounce;
   Future<void> pending = Future.value();
@@ -79,6 +80,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
         vividness = value.vividness;
         artwork = value.artwork;
         elements = [...value.elements];
+        bedtimeTags = [...value.bedtimeTags];
         restored = value == draft;
       } else if (widget.date != null) {
         date = DateTime.parse(widget.date!);
@@ -117,6 +119,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
       artwork: artwork,
       favorite: favorite,
       demo: original?.demo ?? false,
+      source: original?.source ?? DreamSource.typed,
+      status: original?.status,
+      bedtimeTags: [...bedtimeTags],
+      aiSuggested: original?.aiSuggested ?? false,
     );
   }
 
@@ -315,7 +321,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
             tr(en, 'Что тебе приснилось?', 'What did you dream about?'),
             style: display(25),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Rhythm.m),
           Text(
             tr(
               en,
@@ -324,7 +330,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
             ),
             style: const TextStyle(color: Palette.secondary, height: 1.5),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: Rhythm.section),
           DreamGlassSurface(
             child: TextField(
               controller: body,
@@ -345,7 +351,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Rhythm.l),
           CupertinoButton(
             onPressed: () async {
               final selected = await dreamDatePicker(
@@ -358,7 +364,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
             },
             child: Text(formatDate(date, en), textAlign: TextAlign.center),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Rhythm.l),
           SectionTitle(tr(en, 'Как ты себя чувствовал?', 'How did it feel?')),
           SizedBox(
             height: 68 + MediaQuery.textScalerOf(context).scale(24),
@@ -380,7 +386,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: Rhythm.l),
           DreamGlassSurface(
             padding: EdgeInsets.zero,
             child: DreamSettingsRow(
@@ -400,7 +406,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
             ),
           ),
           if (details) ...[
-            const SizedBox(height: 22),
+            const SizedBox(height: Rhythm.section),
             TextField(
               controller: title,
               decoration: InputDecoration(
@@ -411,7 +417,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: Rhythm.section),
             SectionTitle(tr(en, 'Тип сна', 'Dream type')),
             DreamSegmentedControl(
               value: type,
@@ -448,7 +454,35 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
               (v) => change(() => vividness = v),
               en,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: Rhythm.section),
+            SectionTitle(tr(en, 'Перед сном', 'Before sleep')),
+            const SizedBox(height: Rhythm.xs),
+            Text(
+              tr(
+                en,
+                'Необязательно — поможет заметить закономерности',
+                'Optional — helps spot patterns over time',
+              ),
+              style: const TextStyle(fontSize: 12, color: Palette.secondary),
+            ),
+            const SizedBox(height: Rhythm.s),
+            Wrap(
+              spacing: Rhythm.s,
+              runSpacing: Rhythm.s,
+              children: [
+                for (final tag in BedtimeTag.values)
+                  DreamChip(
+                    tag.label(en),
+                    selected: bedtimeTags.contains(tag),
+                    onTap: () => change(
+                      () => bedtimeTags.contains(tag)
+                          ? bedtimeTags.remove(tag)
+                          : bedtimeTags.add(tag),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: Rhythm.section),
             SectionTitle(tr(en, 'Тема', 'Theme')),
             Wrap(
               spacing: 8,
@@ -463,7 +497,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
               ],
             ),
             for (final kind in ElementKind.values) ...[
-              const SizedBox(height: 26),
+              const SizedBox(height: Rhythm.section),
               SectionTitle(switch (kind) {
                 ElementKind.symbol => tr(en, 'Символы', 'Symbols'),
                 ElementKind.character => tr(en, 'Персонажи', 'Characters'),
@@ -481,7 +515,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                     ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: Rhythm.s),
               Row(
                 children: [
                   Expanded(
@@ -506,7 +540,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: Rhythm.s),
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
@@ -526,7 +560,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                 ],
               ),
             ],
-            const SizedBox(height: 28),
+            const SizedBox(height: Rhythm.section),
             SectionTitle(tr(en, 'Обложка сна', 'Dream cover')),
             SizedBox(
               height: 100,
@@ -580,7 +614,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
                 style: const TextStyle(color: Color(0xfff29ba9)),
               ),
             ),
-          const SizedBox(height: 24),
+          const SizedBox(height: Rhythm.section),
           DreamButton(
             label: tr(en, 'Сохранить сон', 'Save Dream'),
             icon: CupertinoIcons.sparkles,
@@ -605,6 +639,17 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
           existing ?? ref.read(repositoryProvider).newElement(text, kind),
         ),
       );
+      if (kind == ElementKind.character) {
+        // A character added by hand gets a profile immediately, so the
+        // dreamer can fill it in later (or the assistant can match it).
+        // Profile creation must never block or fail the dream save.
+        unawaited(
+          ref
+              .read(repositoryProvider)
+              .newCharacter(text)
+              .then((_) => null, onError: (Object _) {}),
+        );
+      }
     }
     entityControllers[kind]!.clear();
   }
@@ -707,7 +752,7 @@ class _SavedMomentState extends State<_SavedMoment> {
               child: ClipOval(child: DreamArtwork(widget.artwork)),
             ),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: Rhythm.section),
           Text(
             tr(
               widget.en,

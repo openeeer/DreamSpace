@@ -83,12 +83,12 @@ void main() {
       await _decode(tester);
       expect(backgroundReady, 1);
       expect(haptics.plays, 1);
-      expect(haptics.duration, const Duration(milliseconds: 1650));
+      expect(haptics.duration, const Duration(milliseconds: 1750));
       expect(find.byType(LaunchArtwork), findsOneWidget);
-      await tester.pump(const Duration(milliseconds: 1600));
+      await tester.pump(const Duration(milliseconds: 1700));
       expect(find.byType(LaunchArtwork), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 60));
-      await tester.pump(const Duration(milliseconds: 230));
+      await tester.pump(const Duration(milliseconds: 270));
       expect(find.byType(LaunchArtwork), findsNothing);
       expect(mounts, 1);
       expect(find.text('Journal ready'), findsOneWidget);
@@ -150,8 +150,9 @@ void main() {
       expect(stops, greaterThan(0));
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 1201));
-      await tester.pump(const Duration(milliseconds: 230));
+      // Fill resumes from where it paused (450ms in), then reveal runs.
+      await tester.pump(const Duration(milliseconds: 1301));
+      await tester.pump(const Duration(milliseconds: 270));
       expect(haptics.plays, 1);
       expect(find.byType(LaunchArtwork), findsNothing);
       await tester.pumpWidget(const SizedBox());
@@ -176,8 +177,8 @@ void main() {
     expect(find.text('Попробовать снова'), findsOneWidget);
     await tester.tap(find.text('Попробовать снова'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 1651));
-    await tester.pump(const Duration(milliseconds: 221));
+    await tester.pump(const Duration(milliseconds: 1751));
+    await tester.pump(const Duration(milliseconds: 261));
     expect(attempts, 2);
     expect(find.byType(LaunchArtwork), findsNothing);
     expect(tester.takeException(), isNull);

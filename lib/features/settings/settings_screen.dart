@@ -95,7 +95,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     tr(en, 'Твой DreamSpace', 'Your DreamSpace'),
                     style: display(24),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: Rhythm.s),
                   Text(
                     tr(
                       en,
@@ -173,7 +173,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: Rhythm.section),
         DreamSettingsSection(
           title: tr(en, 'Утренний ритуал', 'Morning ritual'),
           icon: CupertinoIcons.sunrise,
@@ -258,7 +258,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: Rhythm.section),
         DreamSettingsSection(
           title: tr(en, 'Ощущения', 'Experience'),
           icon: CupertinoIcons.sparkles,
@@ -300,7 +300,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: Rhythm.section),
+        DreamSettingsSection(
+          title: tr(en, 'Обработка снов', 'Dream processing'),
+          icon: CupertinoIcons.sparkles,
+          children: [
+            DreamSettingsRow(
+              icon: CupertinoIcons.cloud_upload,
+              title: tr(en, 'Расшифровка на сервере', 'Server transcription'),
+              subtitle: tr(
+                en,
+                'Продиктованные сны отправляются на обработку: настроение, персонажи, обложка',
+                'Dictated dreams go for processing: mood, characters, cover',
+              ),
+              trailing: DreamGlassSwitch(
+                label: tr(en, 'Расшифровка на сервере', 'Server transcription'),
+                value: settings['serverProcessing'] == 'true',
+                onChanged: working
+                    ? null
+                    : (v) => run(() => controller.set('serverProcessing', '$v')),
+              ),
+            ),
+            if (settings['serverProcessing'] != 'true')
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, Rhythm.s, 14, Rhythm.m),
+                child: Text(
+                  tr(
+                    en,
+                    'Выключено: диктовка сохраняется только на этом устройстве, как текст. Ассистент не включается.',
+                    'Off: dictation stays on this device as text only. The assistant never wakes up.',
+                  ),
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.4,
+                    color: InternalStyle.muted(context),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: Rhythm.section),
         DreamSettingsSection(
           title: tr(en, 'Данные', 'Your data'),
           icon: CupertinoIcons.archivebox,
@@ -327,7 +366,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: Rhythm.section),
         Center(child: Text('DreamSpace · 1.0.0', style: display(19))),
         const SizedBox(height: 8),
         Text(
@@ -428,12 +467,12 @@ class _DreamLicensesPageState extends State<DreamLicensesPage> {
               children: [
                 for (final entry in snapshot.data!) ...[
                   Text(entry.packages.join(', '), style: display(19)),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: Rhythm.m),
                   SelectableText(
                     entry.paragraphs.map((p) => p.text).join('\n\n'),
                     style: const TextStyle(fontSize: 14, height: 1.5),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: Rhythm.section),
                 ],
               ],
             );

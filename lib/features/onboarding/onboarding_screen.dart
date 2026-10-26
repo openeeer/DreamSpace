@@ -96,9 +96,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             'Собирай места, людей и ощущения. Замечай, что возвращается из ночи в ночь.',
             'Сны с общими образами соединяются на карте. Исследуй связи между своими историями.',
           ];
-    final labels = en
-        ? ['REMEMBER', 'NOTICE', 'EXPLORE']
-        : ['ЗАПОМИНАЙ', 'ЗАМЕЧАЙ', 'ИССЛЕДУЙ'];
     return Scaffold(
       body: Stack(
         children: [
@@ -158,16 +155,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                   ? CrossAxisAlignment.start
                                   : CrossAxisAlignment.center,
                               children: [
-                                Text(
-                                  labels[i],
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 3,
+                                // The step itself carries the meaning — a small
+                                // accent marker, not a shouted label.
+                                Container(
+                                  width: 28,
+                                  height: 3,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(2),
                                     color: InternalStyle.accent(context),
                                   ),
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: Rhythm.l),
                                 Text(
                                   titles[i],
                                   textAlign: wide
@@ -177,7 +175,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                     constraints.maxWidth < 360 ? 28 : 32,
                                   ),
                                 ),
-                                const SizedBox(height: 18),
+                                const SizedBox(height: Rhythm.l),
                                 Text(
                                   descriptions[i],
                                   textAlign: wide
@@ -205,7 +203,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 16,
+                                      vertical: Rhythm.l,
                                     ),
                                     child: wide
                                         ? Row(
@@ -224,22 +222,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                                         .clamp(160.0, 290.0),
                                                 child: art,
                                               ),
-                                              const SizedBox(height: 12),
-                                              copy,
-                                            ],
-                                          ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 20),
+                                               const SizedBox(height: Rhythm.m),
+                                               copy,
+                                             ],
+                                           ),
+                                   ),
+                                 ),
+                               ),
+                             ),
+                           );
+                         },
+                       );
+                     },
+                   ),
+                 ),
+                 Padding(
+                   padding: const EdgeInsets.fromLTRB(28, Rhythm.s, 28, 20),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 420),
                     child: Column(
@@ -274,10 +272,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: Rhythm.section),
                         if (error != null)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.only(bottom: Rhythm.m),
                             child: Text(error!, textAlign: TextAlign.center),
                           ),
                         SizedBox(

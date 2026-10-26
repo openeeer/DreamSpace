@@ -40,6 +40,21 @@ enum DreamTheme {
 
 enum ElementKind { symbol, character, place }
 
+/// Context tags the dreamer can set right before sleeping. Stored as raw
+/// enum names; the server side may later correlate them with dream moods.
+enum BedtimeTag {
+  lateCaffeine('Кофе поздно', 'Late caffeine'),
+  alcohol('Алкоголь', 'Alcohol'),
+  screens('Экраны перед сном', 'Screens before bed'),
+  stress('Стресс', 'Stress'),
+  lateMeal('Поздняя еда', 'Late meal'),
+  lateWorkout('Поздняя тренировка', 'Late workout');
+
+  const BedtimeTag(this.ru, this.en);
+  final String ru, en;
+  String label(bool english) => english ? en : ru;
+}
+
 class DreamElement {
   const DreamElement({
     required this.id,
@@ -50,6 +65,13 @@ class DreamElement {
   final ElementKind kind;
   Map<String, dynamic> toJson() => {'id': id, 'name': name, 'kind': kind.name};
 }
+
+/// How the dream entered the app.
+enum DreamSource { typed, dictated }
+
+/// Server processing lifecycle. `queued` also covers offline: the job waits
+/// for connectivity, the dream itself is already saved.
+enum ProcessingStatus { queued, running, done, failed }
 
 class Dream {
   const Dream({
@@ -69,6 +91,10 @@ class Dream {
     this.favorite = false,
     this.artwork = 'moon_library',
     this.demo = false,
+    this.source = DreamSource.typed,
+    this.status,
+    this.bedtimeTags = const [],
+    this.aiSuggested = false,
   });
   final String id, title, description, artwork;
   final DateTime date, createdAt, updatedAt;
@@ -78,25 +104,51 @@ class Dream {
   final int? lucidity, vividness;
   final DreamTheme? theme;
   final List<DreamElement> elements;
+  final DreamSource source;
+  /// Null means the dream never went through (or opted out of) processing.
+  final ProcessingStatus? status;
+  final List<BedtimeTag> bedtimeTags;
+  /// True when the mood/type/theme/lucidity on this dream came from the
+  /// assistant rather than the dreamer, and the dreamer has not overruled it.
+  final bool aiSuggested;
   List<DreamElement> ofKind(ElementKind kind) =>
       elements.where((e) => e.kind == kind).toList();
-  Dream copyWith({bool? favorite, List<DreamElement>? elements}) => Dream(
+  bool get pendingProcessing => status == ProcessingStatus.queued ||
+      status == ProcessingStatus.running;
+  Dream copyWith({
+    bool? favorite,
+    List<DreamElement>? elements,
+    Mood? mood,
+    bool? clearMood,
+    DreamType? type,
+    DreamTheme? theme,
+    bool? clearTheme,
+    int? lucidity,
+    int? vividness,
+    String? artwork,
+    ProcessingStatus? status,
+    bool? aiSuggested,
+  }) => Dream(
     id: id,
     title: title,
     description: description,
     date: date,
     createdAt: createdAt,
     updatedAt: DateTime.now().toUtc(),
-    mood: mood,
-    type: type,
+    mood: clearMood == true ? null : (mood ?? this.mood),
+    type: type ?? this.type,
     recurring: recurring,
-    lucidity: lucidity,
-    vividness: vividness,
-    theme: theme,
+    lucidity: lucidity ?? this.lucidity,
+    vividness: vividness ?? this.vividness,
+    theme: clearTheme == true ? null : (theme ?? this.theme),
     elements: elements ?? this.elements,
     favorite: favorite ?? this.favorite,
-    artwork: artwork,
+    artwork: artwork ?? this.artwork,
     demo: demo,
+    source: source,
+    status: status ?? this.status,
+    bedtimeTags: bedtimeTags,
+    aiSuggested: aiSuggested ?? this.aiSuggested,
   );
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -115,6 +167,10 @@ class Dream {
     'favorite': favorite,
     'artwork': artwork,
     'demo': demo,
+    'source': source.name,
+    'status': status?.name,
+    'bedtimeTags': bedtimeTags.map((t) => t.name).toList(),
+    'aiSuggested': aiSuggested,
   };
   factory Dream.fromJson(Map<String, dynamic> j) => Dream(
     id: j['id'] as String,
@@ -134,6 +190,16 @@ class Dream {
     favorite: j['favorite'] as bool? ?? false,
     artwork: j['artwork'] as String,
     demo: j['demo'] as bool? ?? false,
+    source: j['source'] == null
+        ? DreamSource.typed
+        : DreamSource.values.byName(j['source'] as String),
+    status: j['status'] == null
+        ? null
+        : ProcessingStatus.values.byName(j['status'] as String),
+    bedtimeTags: (j['bedtimeTags'] as List? ?? [])
+        .map((t) => BedtimeTag.values.byName(t as String))
+        .toList(),
+    aiSuggested: j['aiSuggested'] as bool? ?? false,
     elements: (j['elements'] as List)
         .map(
           (e) => DreamElement(

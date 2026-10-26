@@ -389,23 +389,24 @@ class _DreamJournalCardState extends ConsumerState<DreamJournalCard> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Expanded(
-                                child: Wrap(
-                                  spacing: 6,
-                                  runSpacing: 4,
-                                  children: [
-                                    if (dream.mood != null)
-                                      JournalTag(
-                                        dream.mood!.label(en),
-                                        color: moodColor(dream.mood),
-                                      ),
-                                    JournalTag(dream.type.label(en)),
-                                  ],
-                                ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            if (dream.pendingProcessing)
+                              JournalStatusChip(en: en, dream: dream),                            if (dream.mood != null)
+                              JournalTag(
+                                dream.mood!.label(en),
+                                color: moodColor(dream.mood),
                               ),
+                            JournalTag(dream.type.label(en)),
+                          ],
+                        ),
+                      ),
                               const SizedBox(width: 4),
                               Container(
                                 decoration: BoxDecoration(
@@ -515,4 +516,56 @@ class JournalTag extends StatelessWidget {
     ),
     child: Text(label, style: TextStyle(fontSize: 10, color: color)),
   );
+}
+
+/// Quiet badge for server-pending or offline-queued dreams. Tapping it opens
+/// the live processing view instead of the dream detail — the dreamer sees
+/// what stage the assistant is on. Never blocks the rest of the card.
+class JournalStatusChip extends StatelessWidget {
+  const JournalStatusChip({super.key, required this.en, required this.dream});
+  final bool en;
+  final Dream dream;
+  @override
+  Widget build(BuildContext context) {
+    final color = dream.status == ProcessingStatus.failed
+        ? Palette.gold
+        : Palette.blue;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => context.push('/processing/${dream.id}'),
+      child: Semantics(
+        label: dream.status == ProcessingStatus.failed
+            ? tr(en, 'Обработка не удалась. Открыть статус', 'Processing failed. Open status')
+            : tr(en, 'Ещё обрабатывается. Открыть статус', 'Still processing. Open status'),
+        button: true,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: .14),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withValues(alpha: .3), width: .6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                dream.status == ProcessingStatus.failed
+                    ? CupertinoIcons.wifi_exclamationmark
+                    : CupertinoIcons.hourglass,
+                size: 9,
+                color: color,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                dream.status == ProcessingStatus.failed
+                    ? tr(en, 'ждёт сети', 'awaiting network')
+                    : tr(en, 'обрабатывается', 'processing'),
+                style: TextStyle(fontSize: 10, color: color),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

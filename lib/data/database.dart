@@ -41,15 +41,39 @@ class Preferences extends Table {
   Set<Column> get primaryKey => {key};
 }
 
-@DriftDatabase(tables: [DreamRows, ElementRows, DreamLinks, Preferences])
+class CharacterRows extends Table {
+  TextColumn get id => text()();
+  TextColumn get payload => text()();
+  DateTimeColumn get created => dateTime()();
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class MatchRows extends Table {
+  TextColumn get dreamId => text()();
+  TextColumn get candidateId => text()();
+  TextColumn get payload => text()();
+  @override
+  Set<Column> get primaryKey => {dreamId, candidateId};
+}
+
+@DriftDatabase(
+  tables: [DreamRows, ElementRows, DreamLinks, Preferences, CharacterRows, MatchRows],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'dreamspace'));
   AppDatabase.forTesting(super.executor);
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(characterRows);
+        await m.createTable(matchRows);
+      }
+    },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },

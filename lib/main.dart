@@ -18,7 +18,10 @@ import 'data/repository.dart';
 import 'features/home/home_screen.dart';
 import 'features/dreams/journal_screen.dart';
 import 'features/dreams/editor_screen.dart';
+import 'features/dreams/dictation_screen.dart';
+import 'features/dreams/processing_screen.dart';
 import 'features/dreams/detail_screen.dart';
+import 'features/characters/characters_screen.dart';
 import 'features/dream_map/map_screen.dart';
 import 'features/elements/elements_screen.dart';
 import 'features/insights/insights_screen.dart';
@@ -174,6 +177,35 @@ GoRouter createRouter(bool onboarded) => GoRouter(
           id: state.uri.queryParameters['id'],
           date: state.uri.queryParameters['date'],
         ),
+      ),
+    ),
+    GoRoute(
+      path: '/record/dictate',
+      pageBuilder: (context, state) => dreamRoute(
+        context,
+        state,
+        const DictationScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/processing/:id',
+      pageBuilder: (context, state) => dreamRoute(
+        context,
+        state,
+        ProcessingScreen(dreamId: state.pathParameters['id']!),
+      ),
+    ),
+    GoRoute(
+      path: '/characters',
+      pageBuilder: (context, state) =>
+          dreamRoute(context, state, const CharactersScreen()),
+    ),
+    GoRoute(
+      path: '/characters/:id',
+      pageBuilder: (context, state) => dreamRoute(
+        context,
+        state,
+        CharacterDetailScreen(id: state.pathParameters['id']!),
       ),
     ),
     GoRoute(

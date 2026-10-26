@@ -23,6 +23,16 @@ abstract final class Palette {
       mint = Color(0xff9ad8cc);
 }
 
+/// Vertical rhythm on a 4/8 base grid. Sections of a screen separate by
+/// [section]; sibling elements inside one section by [m]. Larger jumps
+/// ([xl]) are reserved for the first screen of a flow. Anything outside
+/// this scale is a layout defect, not a style choice.
+abstract final class Rhythm {
+  static const xs = 4.0, s = 8.0, m = 12.0, l = 16.0, section = 24.0, xl = 32.0;
+  /// Shared horizontal content gutter for every top-level screen.
+  static const gutter = 20.0;
+}
+
 String tr(bool en, String ru, String english) => en ? english : ru;
 String formatDate(DateTime date, bool en) =>
     DateFormat('d MMM y', en ? 'en' : 'ru').format(date);
@@ -929,8 +939,17 @@ class DreamCard extends ConsumerWidget {
 }
 
 class EmptyDreams extends StatelessWidget {
-  const EmptyDreams({super.key, required this.en, this.search = false});
+  const EmptyDreams({
+    super.key,
+    required this.en,
+    this.search = false,
+    this.notFound = false,
+  });
   final bool en, search;
+
+  /// "Not found" contexts (deep link, deleted dream): the honest next step
+  /// is going back to the journal, not recording a brand-new dream.
+  final bool notFound;
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 44),
@@ -943,7 +962,9 @@ class EmptyDreams extends StatelessWidget {
         ),
         const SizedBox(height: 22),
         Text(
-          search
+          notFound
+              ? tr(en, 'Этот сон исчез', 'This dream is gone')
+              : search
               ? tr(en, 'Ничего не найдено', 'No dreams found')
               : tr(
                   en,
@@ -955,7 +976,13 @@ class EmptyDreams extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          search
+          notFound
+              ? tr(
+                  en,
+                  'Возможно, он был удалён. Остальные — в дневнике.',
+                  'It may have been deleted. The rest are in your journal.',
+                )
+              : search
               ? tr(
                   en,
                   'Измени запрос или фильтры.',
@@ -972,8 +999,12 @@ class EmptyDreams extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 26),
             child: DreamButton(
-              label: tr(en, 'Записать сон', 'Record Dream'),
-              onPressed: () => context.push('/record'),
+              label: notFound
+                  ? tr(en, 'Вернуться в дневник', 'Back to journal')
+                  : tr(en, 'Записать сон', 'Record Dream'),
+              onPressed: () => notFound
+                  ? context.go('/journal')
+                  : context.push('/record'),
             ),
           ),
       ],

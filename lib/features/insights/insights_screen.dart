@@ -48,16 +48,17 @@ class _InsightsScreenState extends State<InsightsScreen> {
             },
             onChanged: (v) => setState(() => period = v),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: Rhythm.section),
           DreamGlassSurface(
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Icon(
                   CupertinoIcons.moon_stars,
                   color: Palette.lavender,
                   size: 30,
                 ),
-                const SizedBox(width: 24),
+                const SizedBox(width: Rhythm.l),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +73,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: Rhythm.l),
           if (stats.elements(ElementKind.symbol).isNotEmpty) ...[
             DreamSettingsSection(
               children: [
@@ -97,7 +98,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: Rhythm.l),
           ],
           LayoutBuilder(
             builder: (context, constraints) {
@@ -120,12 +121,12 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   MediaQuery.textScalerOf(context).scale(14) > 20) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 12,
+                  spacing: Rhythm.m,
                   children: tiles,
                 );
               }
               return Column(
-                spacing: 12,
+                spacing: Rhythm.m,
                 children: [
                   for (var i = 0; i < tiles.length; i += 2)
                     IntrinsicHeight(
@@ -133,7 +134,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Expanded(child: tiles[i]),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: Rhythm.m),
                           Expanded(child: tiles[i + 1]),
                         ],
                       ),
@@ -142,7 +143,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               );
             },
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: Rhythm.section),
           SectionTitle(
             tr(en, 'Активность за 14 дней', 'Activity · last 14 days'),
           ),
@@ -214,7 +215,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: Rhythm.section),
           SectionTitle(tr(en, 'Палитра настроений', 'Mood distribution')),
           DreamGlassSurface(
             child: Column(
@@ -229,7 +230,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   ),
                 for (final entry in moods)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.only(bottom: Rhythm.l),
                     child: Column(
                       children: [
                         Row(
@@ -267,7 +268,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
             ),
           ),
           for (final kind in [ElementKind.symbol, ElementKind.place]) ...[
-            const SizedBox(height: 22),
+            const SizedBox(height: Rhythm.section),
             SectionTitle(
               kind == ElementKind.symbol
                   ? tr(en, 'Повторяющиеся образы', 'Recurring symbols')
@@ -292,7 +293,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               ),
             ),
           ],
-          const SizedBox(height: 22),
+          const SizedBox(height: Rhythm.section),
           SectionTitle(tr(en, 'Темы снов', 'Dream themes')),
           DreamGlassSurface(
             child: Column(

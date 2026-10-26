@@ -274,9 +274,9 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
               slivers: [
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
-                    20,
-                    MediaQuery.paddingOf(context).top + 22,
-                    20,
+                    Rhythm.gutter,
+                    MediaQuery.paddingOf(context).top + 20,
+                    Rhythm.gutter,
                     0,
                   ),
                   sliver: SliverList.list(
@@ -304,7 +304,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                               },
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: Rhythm.s),
                           DecoratedBox(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
@@ -332,7 +332,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: Rhythm.s),
                       Text(
                         tr(
                           en,
@@ -344,7 +344,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: Rhythm.section),
                       JournalGlass(
                         radius: 26,
                         floating: true,
@@ -421,7 +421,7 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: Rhythm.m),
                     ],
                   ),
                 ),
@@ -434,9 +434,11 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Rhythm.gutter,
+                      ),
                       itemCount: 5,
-                      separatorBuilder: (_, i) => const SizedBox(width: 8),
+                      separatorBuilder: (_, i) => const SizedBox(width: Rhythm.s),
                       itemBuilder: (_, i) => JournalFilter(
                         label: labels(en)[i],
                         selected: filter == i,
@@ -448,7 +450,9 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                 if (mood != null)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Rhythm.gutter,
+                      ),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: CupertinoButton(
@@ -465,14 +469,19 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                       ),
                     ),
                   ),
-                const SliverToBoxAdapter(child: SizedBox(height: 14)),
+                const SliverToBoxAdapter(child: SizedBox(height: Rhythm.m)),
                 if (visible.isEmpty)
                   SliverToBoxAdapter(
                     child: EmptyDreams(en: en, search: dreams.isNotEmpty),
                   ),
                 for (final entry in months.entries) ...[
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                    padding: const EdgeInsets.fromLTRB(
+                      Rhythm.gutter,
+                      0,
+                      Rhythm.gutter,
+                      Rhythm.s,
+                    ),
                     sliver: SliverToBoxAdapter(
                       child: Semantics(
                         expanded: !collapsed.contains(entry.key),
@@ -526,7 +535,9 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                   ),
                   if (!collapsed.contains(entry.key))
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Rhythm.gutter,
+                      ),
                       sliver: SliverList.builder(
                         itemCount: entry.value.length,
                         itemBuilder: (_, i) => DreamJournalCard(

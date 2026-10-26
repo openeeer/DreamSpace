@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/character.dart';
 import '../models/dream.dart';
 import 'repository.dart';
 
@@ -26,3 +27,18 @@ class SettingsController extends Notifier<Map<String, String>> {
 final englishProvider = Provider<bool>(
   (ref) => ref.watch(settingsProvider)['language'] == 'en',
 );
+
+/// Character profiles the dreamer has filled in. Watched by the screens that
+/// list, edit, and match characters.
+final charactersProvider = StreamProvider<List<DreamCharacter>>(
+  (ref) => ref.watch(repositoryProvider).watchCharacters(),
+);
+
+/// Unresolved match suggestions for one dream, smallest friction first.
+final characterMatchesProvider = StreamProvider.family
+    .autoDispose<List<CharacterMatch>, String>((ref, dreamId) {
+  final repo = ref.watch(repositoryProvider);
+  return repo
+      .watchMatches()
+      .map((all) => all.where((m) => m.dreamId == dreamId).toList());
+});

@@ -1054,6 +1054,538 @@ class PreferencesCompanion extends UpdateCompanion<Preference> {
   }
 }
 
+class $CharacterRowsTable extends CharacterRows
+    with TableInfo<$CharacterRowsTable, CharacterRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CharacterRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdMeta = const VerificationMeta(
+    'created',
+  );
+  @override
+  late final GeneratedColumn<DateTime> created = GeneratedColumn<DateTime>(
+    'created',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, payload, created];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'character_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CharacterRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('created')) {
+      context.handle(
+        _createdMeta,
+        created.isAcceptableOrUnknown(data['created']!, _createdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CharacterRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CharacterRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+      created: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created'],
+      )!,
+    );
+  }
+
+  @override
+  $CharacterRowsTable createAlias(String alias) {
+    return $CharacterRowsTable(attachedDatabase, alias);
+  }
+}
+
+class CharacterRow extends DataClass implements Insertable<CharacterRow> {
+  final String id;
+  final String payload;
+  final DateTime created;
+  const CharacterRow({
+    required this.id,
+    required this.payload,
+    required this.created,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['payload'] = Variable<String>(payload);
+    map['created'] = Variable<DateTime>(created);
+    return map;
+  }
+
+  CharacterRowsCompanion toCompanion(bool nullToAbsent) {
+    return CharacterRowsCompanion(
+      id: Value(id),
+      payload: Value(payload),
+      created: Value(created),
+    );
+  }
+
+  factory CharacterRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CharacterRow(
+      id: serializer.fromJson<String>(json['id']),
+      payload: serializer.fromJson<String>(json['payload']),
+      created: serializer.fromJson<DateTime>(json['created']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'payload': serializer.toJson<String>(payload),
+      'created': serializer.toJson<DateTime>(created),
+    };
+  }
+
+  CharacterRow copyWith({String? id, String? payload, DateTime? created}) =>
+      CharacterRow(
+        id: id ?? this.id,
+        payload: payload ?? this.payload,
+        created: created ?? this.created,
+      );
+  CharacterRow copyWithCompanion(CharacterRowsCompanion data) {
+    return CharacterRow(
+      id: data.id.present ? data.id.value : this.id,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      created: data.created.present ? data.created.value : this.created,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CharacterRow(')
+          ..write('id: $id, ')
+          ..write('payload: $payload, ')
+          ..write('created: $created')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, payload, created);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CharacterRow &&
+          other.id == this.id &&
+          other.payload == this.payload &&
+          other.created == this.created);
+}
+
+class CharacterRowsCompanion extends UpdateCompanion<CharacterRow> {
+  final Value<String> id;
+  final Value<String> payload;
+  final Value<DateTime> created;
+  final Value<int> rowid;
+  const CharacterRowsCompanion({
+    this.id = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.created = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CharacterRowsCompanion.insert({
+    required String id,
+    required String payload,
+    required DateTime created,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       payload = Value(payload),
+       created = Value(created);
+  static Insertable<CharacterRow> custom({
+    Expression<String>? id,
+    Expression<String>? payload,
+    Expression<DateTime>? created,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (payload != null) 'payload': payload,
+      if (created != null) 'created': created,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CharacterRowsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? payload,
+    Value<DateTime>? created,
+    Value<int>? rowid,
+  }) {
+    return CharacterRowsCompanion(
+      id: id ?? this.id,
+      payload: payload ?? this.payload,
+      created: created ?? this.created,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (created.present) {
+      map['created'] = Variable<DateTime>(created.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CharacterRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('payload: $payload, ')
+          ..write('created: $created, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MatchRowsTable extends MatchRows
+    with TableInfo<$MatchRowsTable, MatchRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MatchRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dreamIdMeta = const VerificationMeta(
+    'dreamId',
+  );
+  @override
+  late final GeneratedColumn<String> dreamId = GeneratedColumn<String>(
+    'dream_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _candidateIdMeta = const VerificationMeta(
+    'candidateId',
+  );
+  @override
+  late final GeneratedColumn<String> candidateId = GeneratedColumn<String>(
+    'candidate_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [dreamId, candidateId, payload];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'match_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MatchRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('dream_id')) {
+      context.handle(
+        _dreamIdMeta,
+        dreamId.isAcceptableOrUnknown(data['dream_id']!, _dreamIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dreamIdMeta);
+    }
+    if (data.containsKey('candidate_id')) {
+      context.handle(
+        _candidateIdMeta,
+        candidateId.isAcceptableOrUnknown(
+          data['candidate_id']!,
+          _candidateIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_candidateIdMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {dreamId, candidateId};
+  @override
+  MatchRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MatchRow(
+      dreamId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dream_id'],
+      )!,
+      candidateId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}candidate_id'],
+      )!,
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+    );
+  }
+
+  @override
+  $MatchRowsTable createAlias(String alias) {
+    return $MatchRowsTable(attachedDatabase, alias);
+  }
+}
+
+class MatchRow extends DataClass implements Insertable<MatchRow> {
+  final String dreamId;
+  final String candidateId;
+  final String payload;
+  const MatchRow({
+    required this.dreamId,
+    required this.candidateId,
+    required this.payload,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['dream_id'] = Variable<String>(dreamId);
+    map['candidate_id'] = Variable<String>(candidateId);
+    map['payload'] = Variable<String>(payload);
+    return map;
+  }
+
+  MatchRowsCompanion toCompanion(bool nullToAbsent) {
+    return MatchRowsCompanion(
+      dreamId: Value(dreamId),
+      candidateId: Value(candidateId),
+      payload: Value(payload),
+    );
+  }
+
+  factory MatchRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MatchRow(
+      dreamId: serializer.fromJson<String>(json['dreamId']),
+      candidateId: serializer.fromJson<String>(json['candidateId']),
+      payload: serializer.fromJson<String>(json['payload']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'dreamId': serializer.toJson<String>(dreamId),
+      'candidateId': serializer.toJson<String>(candidateId),
+      'payload': serializer.toJson<String>(payload),
+    };
+  }
+
+  MatchRow copyWith({String? dreamId, String? candidateId, String? payload}) =>
+      MatchRow(
+        dreamId: dreamId ?? this.dreamId,
+        candidateId: candidateId ?? this.candidateId,
+        payload: payload ?? this.payload,
+      );
+  MatchRow copyWithCompanion(MatchRowsCompanion data) {
+    return MatchRow(
+      dreamId: data.dreamId.present ? data.dreamId.value : this.dreamId,
+      candidateId: data.candidateId.present
+          ? data.candidateId.value
+          : this.candidateId,
+      payload: data.payload.present ? data.payload.value : this.payload,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MatchRow(')
+          ..write('dreamId: $dreamId, ')
+          ..write('candidateId: $candidateId, ')
+          ..write('payload: $payload')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(dreamId, candidateId, payload);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MatchRow &&
+          other.dreamId == this.dreamId &&
+          other.candidateId == this.candidateId &&
+          other.payload == this.payload);
+}
+
+class MatchRowsCompanion extends UpdateCompanion<MatchRow> {
+  final Value<String> dreamId;
+  final Value<String> candidateId;
+  final Value<String> payload;
+  final Value<int> rowid;
+  const MatchRowsCompanion({
+    this.dreamId = const Value.absent(),
+    this.candidateId = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MatchRowsCompanion.insert({
+    required String dreamId,
+    required String candidateId,
+    required String payload,
+    this.rowid = const Value.absent(),
+  }) : dreamId = Value(dreamId),
+       candidateId = Value(candidateId),
+       payload = Value(payload);
+  static Insertable<MatchRow> custom({
+    Expression<String>? dreamId,
+    Expression<String>? candidateId,
+    Expression<String>? payload,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (dreamId != null) 'dream_id': dreamId,
+      if (candidateId != null) 'candidate_id': candidateId,
+      if (payload != null) 'payload': payload,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MatchRowsCompanion copyWith({
+    Value<String>? dreamId,
+    Value<String>? candidateId,
+    Value<String>? payload,
+    Value<int>? rowid,
+  }) {
+    return MatchRowsCompanion(
+      dreamId: dreamId ?? this.dreamId,
+      candidateId: candidateId ?? this.candidateId,
+      payload: payload ?? this.payload,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (dreamId.present) {
+      map['dream_id'] = Variable<String>(dreamId.value);
+    }
+    if (candidateId.present) {
+      map['candidate_id'] = Variable<String>(candidateId.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MatchRowsCompanion(')
+          ..write('dreamId: $dreamId, ')
+          ..write('candidateId: $candidateId, ')
+          ..write('payload: $payload, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1061,6 +1593,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ElementRowsTable elementRows = $ElementRowsTable(this);
   late final $DreamLinksTable dreamLinks = $DreamLinksTable(this);
   late final $PreferencesTable preferences = $PreferencesTable(this);
+  late final $CharacterRowsTable characterRows = $CharacterRowsTable(this);
+  late final $MatchRowsTable matchRows = $MatchRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1070,6 +1604,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     elementRows,
     dreamLinks,
     preferences,
+    characterRows,
+    matchRows,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2150,6 +2686,344 @@ typedef $$PreferencesTableProcessedTableManager =
       Preference,
       PrefetchHooks Function()
     >;
+typedef $$CharacterRowsTableCreateCompanionBuilder =
+    CharacterRowsCompanion Function({
+      required String id,
+      required String payload,
+      required DateTime created,
+      Value<int> rowid,
+    });
+typedef $$CharacterRowsTableUpdateCompanionBuilder =
+    CharacterRowsCompanion Function({
+      Value<String> id,
+      Value<String> payload,
+      Value<DateTime> created,
+      Value<int> rowid,
+    });
+
+class $$CharacterRowsTableFilterComposer
+    extends Composer<_$AppDatabase, $CharacterRowsTable> {
+  $$CharacterRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get created => $composableBuilder(
+    column: $table.created,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CharacterRowsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CharacterRowsTable> {
+  $$CharacterRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get created => $composableBuilder(
+    column: $table.created,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CharacterRowsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CharacterRowsTable> {
+  $$CharacterRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get created =>
+      $composableBuilder(column: $table.created, builder: (column) => column);
+}
+
+class $$CharacterRowsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CharacterRowsTable,
+          CharacterRow,
+          $$CharacterRowsTableFilterComposer,
+          $$CharacterRowsTableOrderingComposer,
+          $$CharacterRowsTableAnnotationComposer,
+          $$CharacterRowsTableCreateCompanionBuilder,
+          $$CharacterRowsTableUpdateCompanionBuilder,
+          (
+            CharacterRow,
+            BaseReferences<_$AppDatabase, $CharacterRowsTable, CharacterRow>,
+          ),
+          CharacterRow,
+          PrefetchHooks Function()
+        > {
+  $$CharacterRowsTableTableManager(_$AppDatabase db, $CharacterRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CharacterRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CharacterRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CharacterRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<DateTime> created = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CharacterRowsCompanion(
+                id: id,
+                payload: payload,
+                created: created,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String payload,
+                required DateTime created,
+                Value<int> rowid = const Value.absent(),
+              }) => CharacterRowsCompanion.insert(
+                id: id,
+                payload: payload,
+                created: created,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CharacterRowsTable, CharacterRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $CharacterRowsTable,
+                    CharacterRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CharacterRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CharacterRowsTable,
+      CharacterRow,
+      $$CharacterRowsTableFilterComposer,
+      $$CharacterRowsTableOrderingComposer,
+      $$CharacterRowsTableAnnotationComposer,
+      $$CharacterRowsTableCreateCompanionBuilder,
+      $$CharacterRowsTableUpdateCompanionBuilder,
+      (
+        CharacterRow,
+        BaseReferences<_$AppDatabase, $CharacterRowsTable, CharacterRow>,
+      ),
+      CharacterRow,
+      PrefetchHooks Function()
+    >;
+typedef $$MatchRowsTableCreateCompanionBuilder =
+    MatchRowsCompanion Function({
+      required String dreamId,
+      required String candidateId,
+      required String payload,
+      Value<int> rowid,
+    });
+typedef $$MatchRowsTableUpdateCompanionBuilder =
+    MatchRowsCompanion Function({
+      Value<String> dreamId,
+      Value<String> candidateId,
+      Value<String> payload,
+      Value<int> rowid,
+    });
+
+class $$MatchRowsTableFilterComposer
+    extends Composer<_$AppDatabase, $MatchRowsTable> {
+  $$MatchRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get dreamId => $composableBuilder(
+    column: $table.dreamId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get candidateId => $composableBuilder(
+    column: $table.candidateId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MatchRowsTableOrderingComposer
+    extends Composer<_$AppDatabase, $MatchRowsTable> {
+  $$MatchRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get dreamId => $composableBuilder(
+    column: $table.dreamId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get candidateId => $composableBuilder(
+    column: $table.candidateId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MatchRowsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MatchRowsTable> {
+  $$MatchRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get dreamId =>
+      $composableBuilder(column: $table.dreamId, builder: (column) => column);
+
+  GeneratedColumn<String> get candidateId => $composableBuilder(
+    column: $table.candidateId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+}
+
+class $$MatchRowsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MatchRowsTable,
+          MatchRow,
+          $$MatchRowsTableFilterComposer,
+          $$MatchRowsTableOrderingComposer,
+          $$MatchRowsTableAnnotationComposer,
+          $$MatchRowsTableCreateCompanionBuilder,
+          $$MatchRowsTableUpdateCompanionBuilder,
+          (MatchRow, BaseReferences<_$AppDatabase, $MatchRowsTable, MatchRow>),
+          MatchRow,
+          PrefetchHooks Function()
+        > {
+  $$MatchRowsTableTableManager(_$AppDatabase db, $MatchRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MatchRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MatchRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MatchRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> dreamId = const Value.absent(),
+                Value<String> candidateId = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MatchRowsCompanion(
+                dreamId: dreamId,
+                candidateId: candidateId,
+                payload: payload,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String dreamId,
+                required String candidateId,
+                required String payload,
+                Value<int> rowid = const Value.absent(),
+              }) => MatchRowsCompanion.insert(
+                dreamId: dreamId,
+                candidateId: candidateId,
+                payload: payload,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$MatchRowsTable, MatchRow>(table),
+                  BaseReferences<_$AppDatabase, $MatchRowsTable, MatchRow>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MatchRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MatchRowsTable,
+      MatchRow,
+      $$MatchRowsTableFilterComposer,
+      $$MatchRowsTableOrderingComposer,
+      $$MatchRowsTableAnnotationComposer,
+      $$MatchRowsTableCreateCompanionBuilder,
+      $$MatchRowsTableUpdateCompanionBuilder,
+      (MatchRow, BaseReferences<_$AppDatabase, $MatchRowsTable, MatchRow>),
+      MatchRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2162,4 +3036,8 @@ class $AppDatabaseManager {
       $$DreamLinksTableTableManager(_db, _db.dreamLinks);
   $$PreferencesTableTableManager get preferences =>
       $$PreferencesTableTableManager(_db, _db.preferences);
+  $$CharacterRowsTableTableManager get characterRows =>
+      $$CharacterRowsTableTableManager(_db, _db.characterRows);
+  $$MatchRowsTableTableManager get matchRows =>
+      $$MatchRowsTableTableManager(_db, _db.matchRows);
 }
