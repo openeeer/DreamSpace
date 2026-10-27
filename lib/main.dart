@@ -275,7 +275,7 @@ class DreamSpaceApp extends ConsumerWidget {
         child: ColoredBox(
           color: Theme.of(context).brightness == Brightness.dark
               ? Palette.night
-              : const Color(0xfff3f1fa),
+              : const Color(0xffeff2ef),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 860),

@@ -708,7 +708,7 @@ class _MapScreenState extends ConsumerState<MapScreen>
                                                                 shadows: [
                                                                   Shadow(
                                                                     color: Color(
-                                                                      0xff080c24,
+                                                                      0xff07182a,
                                                                     ),
                                                                     blurRadius:
                                                                         4,

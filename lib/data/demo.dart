@@ -52,7 +52,9 @@ List<Dream> demoDreams(DateTime now) {
     Mood.mysterious,
   ];
   return List.generate(8, (i) {
-    final date = DateTime(now.year, now.month, now.day - (i == 7 ? 6 : i));
+    // One dream per day: distinct dates keep journal ordering and month
+    // grouping well-defined (no same-day duplicates).
+    final date = DateTime(now.year, now.month, now.day - i);
     DreamElement element(String name, ElementKind kind) => DreamElement(
       id: 'demo-${kind.name}-${normalize(name)}',
       name: name,

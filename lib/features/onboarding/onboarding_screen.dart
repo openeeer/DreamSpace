@@ -297,7 +297,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 )
                               : CupertinoButton(
                                   color: light
-                                      ? const Color(0xff6652b8)
+                                      ? const Color(0xff2e7d64)
                                       : Palette.lavender,
                                   borderRadius: BorderRadius.circular(22),
                                   padding: const EdgeInsets.symmetric(
@@ -443,7 +443,7 @@ class _Constellation extends CustomPainter {
   final bool light;
   @override
   void paint(Canvas canvas, Size size) {
-    final color = light ? const Color(0xff6652b8) : Palette.lavender;
+    final color = light ? const Color(0xff2e7d64) : Palette.lavender;
     final paint = Paint()
       ..color = color.withValues(alpha: .3)
       ..style = PaintingStyle.stroke

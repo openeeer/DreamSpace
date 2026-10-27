@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 const launchBackground = 'assets/launch/background.png';
-const launchNight = Color(0xff070b1e);
+const launchNight = Color(0xff04121f);
 
 class LaunchDestination {
   const LaunchDestination({
@@ -275,7 +275,7 @@ class _DreamLaunchState extends State<DreamLaunch>
                             'Не удалось открыть DreamSpace',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Color(0xfff4f1ff),
+                              color: Color(0xffede9dc),
                               fontSize: 18,
                             ),
                           ),
@@ -287,7 +287,7 @@ class _DreamLaunchState extends State<DreamLaunch>
                             },
                             child: const Text(
                               'Попробовать снова',
-                              style: TextStyle(color: Color(0xffc0acff)),
+                              style: TextStyle(color: Color(0xff9fe8c8)),
                             ),
                           ),
                         ],
@@ -421,7 +421,7 @@ class LaunchEmblem extends StatelessWidget {
                       fontWeight: FontWeight.w400,
                       letterSpacing: 1,
                       height: 1.25,
-                      color: Color(0xffeee8fc),
+                      color: Color(0xffede9dc),
                       decoration: TextDecoration.none,
                     ),
                   ),
@@ -444,7 +444,7 @@ class _LaunchOrbitPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const center = Offset(140, 90);
-    const lavender = Color(0xffc0acff);
+    const lavender = Color(0xff9fe8c8);
     final phase = Curves.easeInOutCubic.transform(progress.value);
     canvas.save();
     canvas.translate(center.dx, center.dy);
@@ -488,7 +488,7 @@ class _LaunchOrbitPainter extends CustomPainter {
           ..color = lavender.withValues(alpha: .28 + .16 * breathe)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
       );
-      canvas.drawCircle(point, 1.5, Paint()..color = const Color(0xfff5eddf));
+      canvas.drawCircle(point, 1.5, Paint()..color = const Color(0xfff5e7c4));
     }
     canvas.restore();
 
@@ -571,21 +571,21 @@ class CrescentFillPainter extends CustomPainter {
     final amount = Curves.easeInOutCubic.transform(phase);
     canvas.drawPath(
       crescent,
-      Paint()..color = const Color(0xffc0acff).withValues(alpha: .055),
+      Paint()..color = const Color(0xff9fe8c8).withValues(alpha: .055),
     );
     canvas.drawPath(
       crescent,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = .8
-        ..color = const Color(0xffd1c5f5).withValues(alpha: .28),
+        ..color = const Color(0xffbfe6d8).withValues(alpha: .28),
     );
     if (amount > 0) {
       if (!reducedMotion) {
         canvas.drawPath(
           crescent,
           Paint()
-            ..color = const Color(0xffad98e5).withValues(alpha: .2 * amount)
+            ..color = const Color(0xff4fa38a).withValues(alpha: .2 * amount)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
         );
       }
@@ -610,7 +610,7 @@ class CrescentFillPainter extends CustomPainter {
           ..shader = ui.Gradient.linear(
             const Offset(20, 14),
             const Offset(53, 65),
-            const [Color(0xfff6edda), Color(0xffe6dffa), Color(0xffad98e5)],
+            const [Color(0xfff5e7c4), Color(0xffe6dffa), Color(0xff4fa38a)],
             const [0, .55, 1],
           ),
       );
@@ -620,7 +620,7 @@ class CrescentFillPainter extends CustomPainter {
           ((progress.value - .7) / .3).clamp(0.0, 1.0) * math.pi,
         );
         final paint = Paint()
-          ..color = const Color(0xfff6edda).withValues(alpha: gleam * .8)
+          ..color = const Color(0xfff5e7c4).withValues(alpha: gleam * .8)
           ..strokeWidth = .85
           ..strokeCap = StrokeCap.round;
         canvas.drawLine(const Offset(61, 16), const Offset(61, 22), paint);

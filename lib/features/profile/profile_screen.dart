@@ -12,10 +12,11 @@ import 'profile_hero.dart';
 abstract final class ProfileStyle {
   static const maxWidth = 460.0;
   static const gutter = Rhythm.gutter;
-  static const panelRadius = 27.0;
-  static const divider = Color(0x26baa6ef);
+  static const panelRadius = 20.0;
 }
 
+/// Deep Tide profile: the sphere floats in the moonbeam at the top; the
+/// stats and the menu sit in quiet tonal plates below.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
   @override
@@ -23,36 +24,11 @@ class ProfileScreen extends ConsumerWidget {
     builder: (dreams, en) {
       final stats = DreamStats(dreams), settings = ref.watch(settingsProvider);
       final joined = DateTime.tryParse(settings['joined'] ?? '');
-      final light = Theme.of(context).brightness == Brightness.light;
       return Scaffold(
         body: Stack(
           children: [
-            Positioned.fill(
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.transparent,
-                        (light ? Colors.white : Palette.night).withValues(
-                          alpha: .2,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 300,
-              child: ProfileLandscape(),
-            ),
+            const Positioned(left: 0, right: 0, bottom: 0, height: 300,
+              child: ProfileLandscape()),
             CustomScrollView(
               key: const PageStorageKey('profile-scroll'),
               physics: const BouncingScrollPhysics(
@@ -91,34 +67,24 @@ class ProfileScreen extends ConsumerWidget {
                               ],
                             ),
                             const SizedBox(height: Rhythm.s),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    tr(
-                                      en,
-                                      'Здесь живут твои сны\nи самые смелые идеи',
-                                      'Your dreams and boldest\nideas live here',
-                                    ),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      height: 1.35,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ),
-                                ProfileHandwritten(en: en),
-                              ],
+                            Text(
+                              tr(
+                                en,
+                                'Здесь живут твои сны\nи самые смелые идеи',
+                                'Your dreams and boldest\nideas live here',
+                              ),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                height: 1.4,
+                                color: Palette.secondary,
+                              ),
                             ),
                             const SizedBox(height: Rhythm.m),
                             const DreamProfileHero(),
                             Text(
                               tr(en, 'Исследователь снов', 'Dream Explorer'),
                               textAlign: TextAlign.center,
-                              style: display(23).copyWith(height: 1.2),
+                              style: diary(21).copyWith(height: 1.2),
                             ),
                             const SizedBox(height: Rhythm.s),
                             Text(
@@ -126,13 +92,11 @@ class ProfileScreen extends ConsumerWidget {
                                   ? 'DreamSpace'
                                   : '${tr(en, 'В DreamSpace с', 'Dreamer since')} ${formatDate(joined, en)}',
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 12,
+                              style: const TextStyle(
+                                fontSize: 11,
                                 letterSpacing: 1,
                                 height: 1.4,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
+                                color: Palette.secondary,
                               ),
                             ),
                             const SizedBox(height: Rhythm.section),
@@ -154,25 +118,6 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            if (!light)
-              Positioned(
-                left: -30,
-                right: -30,
-                bottom: -20,
-                height: 110,
-                child: IgnorePointer(
-                  child: ExcludeSemantics(
-                    child: Opacity(
-                      opacity: .43,
-                      child: Image.asset(
-                        'assets/backgrounds/nebula_foreground.webp',
-                        fit: BoxFit.cover,
-                        cacheWidth: 1000,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       );
@@ -220,12 +165,12 @@ class DreamStatsPanel extends StatelessWidget {
           children: [
             for (var i = 0; i < 3; i++) ...[
               if (i > 0)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   child: VerticalDivider(
                     width: 1,
                     thickness: .7,
-                    color: ProfileStyle.divider,
+                    color: Palette.hairline(),
                   ),
                 ),
               Expanded(
@@ -248,21 +193,21 @@ class DreamStatsPanel extends StatelessWidget {
                         color: Palette.lavender,
                       ),
                       const SizedBox(height: 5),
-                      Text('${[total, streak, lucid][i]}', style: display(26)),
+                      Text('${[total, streak, lucid][i]}', style: display(24)),
                       const SizedBox(height: 5),
-                       Text(
-                         [
-                           tr(en, 'снов', 'dreams'),
-                           tr(en, 'дней подряд', 'day streak'),
-                           tr(en, 'осознанных', 'lucid'),
-                         ][i],
-                         textAlign: TextAlign.center,
-                         style: TextStyle(
-                           fontSize: 11,
-                           height: 1.3,
-                           color: Theme.of(context).colorScheme.onSurfaceVariant,
-                         ),
-                       ),
+                      Text(
+                        [
+                          tr(en, 'снов', 'dreams'),
+                          tr(en, 'дней подряд', 'day streak'),
+                          tr(en, 'осознанных', 'lucid'),
+                        ][i],
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          height: 1.3,
+                          color: Palette.secondary,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -282,6 +227,16 @@ class DreamProfileMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = [
       (
+        CupertinoIcons.plus_circle,
+        tr(en, 'Записать сон', 'Record a dream'),
+        tr(
+          en,
+          'Новый сон в дневник — с любыми деталями',
+          'A new dream into the journal — with any details',
+        ),
+        '/record',
+      ),
+      (
         CupertinoIcons.person_2,
         tr(en, 'Персонажи снов', 'Dream characters'),
         tr(
@@ -290,6 +245,16 @@ class DreamProfileMenu extends StatelessWidget {
           'The people who visit your dreams',
         ),
         '/characters',
+      ),
+      (
+        CupertinoIcons.mic,
+        tr(en, 'Продиктовать сон', 'Dictate a dream'),
+        tr(
+          en,
+          'Расскажи его голосом — пока спросонья это проще',
+          'Tell it out loud — easier while half asleep',
+        ),
+        '/record/dictate',
       ),
       (
         CupertinoIcons.photo,
@@ -328,11 +293,11 @@ class DreamProfileMenu extends StatelessWidget {
           children: [
             for (var i = 0; i < items.length; i++) ...[
               if (i > 0)
-                const Divider(
+                Divider(
                   height: 1,
                   thickness: .7,
                   indent: 60,
-                  color: ProfileStyle.divider,
+                  color: Palette.hairline(),
                 ),
               DreamProfileMenuItem(
                 icon: items[i].$1,
@@ -374,16 +339,17 @@ class DreamProfileMenuItem extends ConsumerWidget {
           height: 36,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+            gradient: RadialGradient(
+              center: const Alignment(-.3, -.35),
               colors: [
-                Palette.lavender.withValues(alpha: .24),
-                Palette.lavender.withValues(alpha: .07),
+                Palette.lavender.withValues(alpha: .28),
+                Palette.lavender.withValues(alpha: .05),
+                Palette.night,
               ],
+              stops: const [0, .6, 1],
             ),
             border: Border.all(
-              color: Palette.lavender.withValues(alpha: .3),
+              color: Palette.lavender.withValues(alpha: .35),
               width: .7,
             ),
           ),
@@ -396,18 +362,18 @@ class DreamProfileMenuItem extends ConsumerWidget {
             children: [
               Text(
                 title,
-                style: display(
-                  17,
-                ).copyWith(color: Theme.of(context).colorScheme.onSurface),
+                style: diary(16).copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 11,
                   height: 1.35,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: Palette.secondary,
                 ),
               ),
             ],
@@ -416,8 +382,8 @@ class DreamProfileMenuItem extends ConsumerWidget {
         const SizedBox(width: 8),
         const Icon(
           CupertinoIcons.chevron_right,
-          size: 17,
-          color: Palette.lavender,
+          size: 15,
+          color: Palette.secondary,
         ),
       ],
     ),
@@ -440,9 +406,8 @@ class DreamPrivacyQuote extends StatelessWidget {
               '“Your dreams live on this device.\nYou decide who to share them with.”',
             ),
             textAlign: TextAlign.center,
-            style: display(13).copyWith(
-              fontStyle: FontStyle.italic,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: diary(13).copyWith(
+              color: Palette.secondary,
               height: 1.65,
             ),
           ),

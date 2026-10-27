@@ -1868,10 +1868,11 @@ class $$DreamRowsTableTableManager
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (dreamLinksRefs)
-                    await $_getPrefetchedData<
+                    await $_getPrefetchedDataByColumns<
                       DreamRow,
                       $DreamRowsTable,
-                      DreamLink
+                      DreamLink,
+                      $DreamLinksTable
                     >(
                       currentTable: table,
                       referencedTable: $$DreamRowsTableReferences
@@ -1882,8 +1883,8 @@ class $$DreamRowsTableTableManager
                             table,
                             p0,
                           ).dreamLinksRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.dreamId == item.id),
+                      currentColumn: 'id',
+                      referencedColumn: 'dream_id',
                       typedResults: items,
                     ),
                 ];
@@ -2152,10 +2153,11 @@ class $$ElementRowsTableTableManager
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (dreamLinksRefs)
-                    await $_getPrefetchedData<
+                    await $_getPrefetchedDataByColumns<
                       ElementRow,
                       $ElementRowsTable,
-                      DreamLink
+                      DreamLink,
+                      $DreamLinksTable
                     >(
                       currentTable: table,
                       referencedTable: $$ElementRowsTableReferences
@@ -2166,8 +2168,8 @@ class $$ElementRowsTableTableManager
                             table,
                             p0,
                           ).dreamLinksRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.elementId == item.id),
+                      currentColumn: 'id',
+                      referencedColumn: 'element_id',
                       typedResults: items,
                     ),
                 ];

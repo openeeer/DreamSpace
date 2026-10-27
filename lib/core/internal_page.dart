@@ -13,11 +13,11 @@ abstract final class InternalStyle {
   static Color muted(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? Palette.secondary
-      : const Color(0xff595573);
+      : const Color(0xff5b6a70);
   static Color accent(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? Palette.lavender
-      : const Color(0xff6652b8);
+      : const Color(0xff2e7d64);
 }
 
 void dreamSelection(WidgetRef ref) {
@@ -59,10 +59,10 @@ class DreamGlassSurface extends ConsumerWidget {
           colors: light
               ? [
                   Colors.white.withValues(alpha: opaque ? 1 : .96),
-                  const Color(0xffe6e1f5).withValues(alpha: opaque ? 1 : .94),
+                  const Color(0xffe3ece7).withValues(alpha: opaque ? 1 : .94),
                 ]
               : [
-                  (selected ? const Color(0xff6952b1) : Palette.raised)
+                  (selected ? const Color(0xff1f6f58) : Palette.raised)
                       .withValues(
                         alpha: opaque
                             ? 1
@@ -633,7 +633,7 @@ class DreamGlassSwitch extends ConsumerWidget {
           padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: value ? const Color(0xff9c83ef) : const Color(0xff484965),
+            color: value ? const Color(0xff9fe8c8) : const Color(0xff1a3546),
             border: Border.all(
               color: InternalStyle.accent(
                 context,
@@ -650,7 +650,7 @@ class DreamGlassSwitch extends ConsumerWidget {
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [Colors.white, Color(0xffece8fa)],
+                  colors: [Colors.white, Color(0xffe3ece7)],
                 ),
               ),
             ),

@@ -221,50 +221,19 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                         colors: [
+                          const Color(0xff9fe8c8).withValues(alpha: .05),
                           Colors.transparent,
-                          const Color(0xff080c24).withValues(alpha: .4),
-                          Colors.transparent,
+                          Palette.night.withValues(alpha: .3),
                         ],
-                        stops: const [0, .5, 1],
+                        stops: const [0, .4, 1],
                       ),
                     ),
                   ),
                 ),
               ),
-            Positioned(
-              top: MediaQuery.paddingOf(context).top - 8,
-              right: 45,
-              width: 200,
-              height: 120,
-              child: IgnorePointer(
-                child: ExcludeSemantics(
-                  child: Opacity(
-                    opacity: light ? .2 : .55,
-                    child: Stack(
-                      children: [
-                        const Positioned(
-                          top: 8,
-                          left: 34,
-                          child: Icon(
-                            CupertinoIcons.moon_fill,
-                            size: 62,
-                            color: Palette.lavender,
-                          ),
-                        ),
-                        Positioned.fill(
-                          child: Image.asset(
-                            'assets/backgrounds/nebula_foreground.webp',
-                            fit: BoxFit.cover,
-                            cacheWidth: 500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
             CustomScrollView(
               key: const PageStorageKey('journal-scroll'),
               physics: const BouncingScrollPhysics(
@@ -555,25 +524,6 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
                 ),
               ],
             ),
-            if (!light)
-              Positioned(
-                left: -35,
-                right: -35,
-                bottom: -25,
-                height: 110,
-                child: IgnorePointer(
-                  child: ExcludeSemantics(
-                    child: Opacity(
-                      opacity: .38,
-                      child: Image.asset(
-                        'assets/backgrounds/nebula_foreground.webp',
-                        fit: BoxFit.cover,
-                        cacheWidth: 1000,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       );

@@ -116,25 +116,27 @@ class _Orbits extends CustomPainter {
   bool shouldRepaint(covariant _Orbits old) => old.phase != phase;
 }
 
-class ProfileHandwritten extends ConsumerWidget {
+/// The handwritten signature, now set in Lora italic instead of a baked PNG
+/// with ink in the previous palette. One system, one accent.
+class ProfileHandwritten extends StatelessWidget {
   const ProfileHandwritten({super.key, required this.en});
   final bool en;
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final path = 'assets/profile/more_than_dreams_${en ? 'en' : 'ru'}.png';
-    if (!(ref.watch(profileAssetsProvider).asData?.value.contains(path) ??
-        false)) {
-      return const SizedBox.shrink();
-    }
-    return IgnorePointer(
-      child: ExcludeSemantics(
-        child: Opacity(
-          opacity: .65,
-          child: Image.asset(path, width: 100, height: 66, fit: BoxFit.contain),
+  Widget build(BuildContext context) => IgnorePointer(
+    child: ExcludeSemantics(
+      child: Opacity(
+        opacity: .75,
+        child: SizedBox(
+          width: 110,
+          child: Text(
+            tr(en, 'Больше, чем сны', 'More than dreams'),
+            textAlign: TextAlign.right,
+            style: diary(15).copyWith(color: Palette.lavender, height: 1.3),
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 class ProfileLandscape extends ConsumerWidget {

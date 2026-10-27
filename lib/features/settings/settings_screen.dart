@@ -116,11 +116,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (!en)
           Padding(
             padding: const EdgeInsets.only(bottom: 24),
-            child: Image.asset(
-              'assets/profile/settings_handwritten_ru.png',
-              height: 64,
-              fit: BoxFit.contain,
-              semanticLabel: 'Маленькие настройки — большие сны',
+            child: Text(
+              'Маленькие настройки — большие сны',
+              style: diary(15).copyWith(color: Palette.lavender),
             ),
           ),
         DreamSettingsSection(

@@ -40,23 +40,27 @@ class JournalGlass extends ConsumerWidget {
     final opaque =
         ref.watch(settingsProvider)['opaque'] == 'true' ||
         MediaQuery.highContrastOf(context);
+    // Deep Tide: tonal plate; an accent panel is the moonlit jade well,
+    // the single interactive plate style.
     final surface = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: accent
-              ? [const Color(0xaaab8bf6), const Color(0x776e57bd)]
-              : light
-              ? [const Color(0xfff5f2fc), const Color(0xffe9e5f3)]
-              : [
-                  Color(opaque ? 0xff171c3c : 0xf0171c3c),
-                  Color(opaque ? 0xff0e142f : 0xec0e142f),
-                ],
-        ),
+        gradient: accent
+            ? const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xff17604c), Color(0xff0d382e)],
+              )
+            : null,
+        color: accent
+            ? null
+            : (light
+                  ? Colors.white.withValues(alpha: opaque ? 1 : .96)
+                  : Palette.surface.withValues(alpha: opaque ? 1 : .93)),
         border: Border.all(
-          color: Palette.lavender.withValues(alpha: accent ? .65 : .14),
+          color: accent
+              ? Palette.lavender.withValues(alpha: .45)
+              : Palette.hairline(light),
           width: .7,
         ),
       ),
@@ -150,27 +154,20 @@ class JournalFilter extends ConsumerWidget {
           duration: reduced ? Duration.zero : const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(19),
-            color: Palette.lavender.withValues(alpha: selected ? .28 : .055),
-            border: Border.all(
-              color: Palette.lavender.withValues(alpha: selected ? .8 : .22),
-              width: .7,
-            ),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: Palette.lavender.withValues(alpha: .2),
-                      blurRadius: 12,
-                    ),
-                  ]
-                : [],
+            borderRadius: BorderRadius.circular(11),
+            color: Palette.lavender.withValues(alpha: selected ? .22 : .06),
+            border: selected
+                ? Border.all(color: Palette.lavender.withValues(alpha: .7), width: .7)
+                : null,
           ),
           child: Text(
             label,
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 11,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: selected
+                  ? Palette.lavender
+                  : Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),
@@ -187,6 +184,8 @@ class DreamJournalCard extends ConsumerStatefulWidget {
   ConsumerState<DreamJournalCard> createState() => _DreamJournalCardState();
 }
 
+/// Museum plate for the journal: framed painting, caption beneath it on the
+/// page. The scrim era is over — the art never carries text again.
 class _DreamJournalCardState extends ConsumerState<DreamJournalCard> {
   bool pressed = false, saving = false;
   Future<void> favorite() async {
@@ -282,218 +281,126 @@ class _DreamJournalCardState extends ConsumerState<DreamJournalCard> {
     final scale = MediaQuery.textScalerOf(context).scale(13) / 13;
     return LayoutBuilder(
       builder: (context, c) => Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: AnimatedScale(
-          scale: pressed && !reduced ? .985 : 1,
-          duration: const Duration(milliseconds: 110),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: (_) => setState(() => pressed = true),
-            onTapUp: (_) => setState(() => pressed = false),
-            onTapCancel: () => setState(() => pressed = false),
-            onTap: () => context.push('/dream/${dream.id}'),
-            onLongPress: menu,
-            child: Semantics(
-              button: true,
-              label: dreamTitle(dream, en),
-              child: Container(
-                height: math.max(178.0, c.maxWidth / 2.15) * math.max(1, scale),
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(23),
-                  boxShadow: const [
-                    BoxShadow(color: Color(0x33080c29), blurRadius: 22),
-                  ],
+        padding: const EdgeInsets.only(bottom: Rhythm.section),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (_) => setState(() => pressed = true),
+          onTapUp: (_) => setState(() => pressed = false),
+          onTapCancel: () => setState(() => pressed = false),
+          onTap: () => context.push('/dream/${dream.id}'),
+          onLongPress: menu,
+          child: Semantics(
+            button: true,
+            label: dreamTitle(dream, en),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Framed painting. Press feedback: the art dims.
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 120),
+                  opacity: pressed && !reduced ? .78 : 1,
+                  child: SizedBox(
+                    height:
+                        math.max(170.0, c.maxWidth / 2.2) * math.max(1, scale),
+                    child: DreamArtwork(dream.artwork, radius: 20),
+                  ),
                 ),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.asset(
-                      'assets/dreams/${dream.artwork}.webp',
-                      fit: BoxFit.cover,
-                      alignment: Alignment.centerRight,
-                      errorBuilder: (_, error, stack) =>
-                          DreamArtwork(dream.artwork),
-                    ),
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(0xf5080d25),
-                            Color(0xc0080d25),
-                            Color(0x05080d25),
-                          ],
-                          stops: [0, .44, 1],
-                        ),
-                      ),
-                    ),
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Color(0x66080d25)],
-                          stops: [.65, 1],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(15, 13, 10, 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            formatDate(dream.date, en),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Palette.secondary,
-                            ),
-                          ),
-                          const SizedBox(height: 7),
-                          FractionallySizedBox(
-                            widthFactor: .88,
-                            child: Text(
-                              dreamTitle(dream, en),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: display(
-                                20,
-                              ).copyWith(color: Palette.text, height: 1.15),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Expanded(
-                            child: FractionallySizedBox(
-                              widthFactor: .62,
-                              alignment: Alignment.topLeft,
-                              child: LayoutBuilder(
-                                builder: (context, area) => Text(
-                                  dream.description,
-                                  maxLines:
-                                      (area.maxHeight /
-                                              MediaQuery.textScalerOf(
-                                                context,
-                                              ).scale(17.55))
-                                          .floor()
-                                          .clamp(1, 5),
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    height: 1.35,
-                                    color: Palette.secondary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                // Museum caption: on the page, under the frame.
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(2, 10, 2, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: [
-                            if (dream.pendingProcessing)
-                              JournalStatusChip(en: en, dream: dream),                            if (dream.mood != null)
-                              JournalTag(
-                                dream.mood!.label(en),
-                                color: moodColor(dream.mood),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              formatDate(dream.date, en),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                letterSpacing: .3,
+                                color: Palette.secondary,
                               ),
-                            JournalTag(dream.type.label(en)),
-                          ],
-                        ),
-                      ),
-                              const SizedBox(width: 4),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: usesNativeGlass
-                                      ? Colors.transparent
-                                      : const Color(0xbb171b38),
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: usesNativeGlass
-                                      ? null
-                                      : Border.all(
-                                          color: Palette.lavender.withValues(
-                                            alpha: .18,
-                                          ),
-                                          width: .6,
-                                        ),
+                            ),
+                          ),
+                          // Actions live in the caption row, quiet and
+                          // reachable, not floating over the art.
+                          TweenAnimationBuilder<double>(
+                            key: ValueKey(dream.favorite),
+                            tween: Tween(
+                              begin:
+                                  dream.favorite &&
+                                  !reduced &&
+                                  !usesNativeGlass
+                                  ? 1.18
+                                  : 1,
+                              end: 1,
+                            ),
+                            duration: const Duration(milliseconds: 220),
+                            builder: (context, value, child) =>
+                                Transform.scale(
+                                  scale: value,
+                                  child: child,
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    TweenAnimationBuilder<double>(
-                                      key: ValueKey(dream.favorite),
-                                      tween: Tween(
-                                        begin:
-                                            dream.favorite &&
-                                                !reduced &&
-                                                !usesNativeGlass
-                                            ? 1.18
-                                            : 1,
-                                        end: 1,
-                                      ),
-                                      duration: const Duration(
-                                        milliseconds: 220,
-                                      ),
-                                      builder: (context, value, child) =>
-                                          Transform.scale(
-                                            scale: value,
-                                            child: child,
-                                          ),
-                                      child: JournalIconButton(
-                                        label: dream.favorite
-                                            ? tr(
-                                                en,
-                                                'Убрать из избранного',
-                                                'Remove from favorites',
-                                              )
-                                            : tr(
-                                                en,
-                                                'В избранное',
-                                                'Add to favorites',
-                                              ),
-                                        icon: dream.favorite
-                                            ? CupertinoIcons.heart_fill
-                                            : CupertinoIcons.heart,
-                                        onPressed: saving ? null : favorite,
-                                      ),
+                            child: JournalIconButton(
+                              label: dream.favorite
+                                  ? tr(
+                                      en,
+                                      'Убрать из избранного',
+                                      'Remove from favorites',
+                                    )
+                                  : tr(
+                                      en,
+                                      'В избранное',
+                                      'Add to favorites',
                                     ),
-                                    JournalIconButton(
-                                      label: tr(
-                                        en,
-                                        'Действия со сном',
-                                        'Dream actions',
-                                      ),
-                                      icon: CupertinoIcons.ellipsis,
-                                      onPressed: menu,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                              icon: dream.favorite
+                                  ? CupertinoIcons.heart_fill
+                                  : CupertinoIcons.heart,
+                              onPressed: saving ? null : favorite,
+                            ),
+                          ),
+                          JournalIconButton(
+                            label: tr(
+                              en,
+                              'Действия со сном',
+                              'Dream actions',
+                            ),
+                            icon: CupertinoIcons.ellipsis,
+                            onPressed: menu,
                           ),
                         ],
                       ),
-                    ),
-                    IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(23),
-                          border: Border.all(
-                            color: Palette.lavender.withValues(alpha: .23),
-                            width: .7,
-                          ),
-                        ),
+                      const SizedBox(height: 3),
+                      Text(
+                        dreamTitle(dream, en),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: diary(
+                          19,
+                        ).copyWith(color: Palette.text, height: 1.12),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: Rhythm.s),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          if (dream.pendingProcessing)
+                            JournalStatusChip(en: en, dream: dream),
+                          if (dream.mood != null)
+                            JournalTag(
+                              dream.mood!.label(en),
+                              color: moodColor(dream.mood),
+                            ),
+                          JournalTag(dream.type.label(en)),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -508,13 +415,16 @@ class JournalTag extends StatelessWidget {
   final Color color;
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+    // Tonal tag: soft fill, no border — mood color carries the meaning.
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
     decoration: BoxDecoration(
       color: color.withValues(alpha: .16),
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: color.withValues(alpha: .3), width: .6),
+      borderRadius: BorderRadius.circular(9),
     ),
-    child: Text(label, style: TextStyle(fontSize: 10, color: color)),
+    child: Text(
+      label,
+      style: TextStyle(fontSize: 11, height: 1.2, color: color),
+    ),
   );
 }
 
@@ -538,12 +448,11 @@ class JournalStatusChip extends StatelessWidget {
             ? tr(en, 'Обработка не удалась. Открыть статус', 'Processing failed. Open status')
             : tr(en, 'Ещё обрабатывается. Открыть статус', 'Still processing. Open status'),
         button: true,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: .14),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withValues(alpha: .3), width: .6),
+            color: color.withValues(alpha: .16),
+            borderRadius: BorderRadius.circular(9),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

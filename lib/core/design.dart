@@ -12,15 +12,24 @@ import '../models/dream.dart';
 import 'native_glass.dart';
 
 abstract final class Palette {
-  static const night = Color(0xff070b1e),
-      surface = Color(0xff12152f),
-      raised = Color(0xff1c2147),
-      text = Color(0xfff4f1ff),
-      secondary = Color(0xffbfc3e6),
-      lavender = Color(0xffc0acff),
-      blue = Color(0xff8fbeff),
-      gold = Color(0xffe6bf88),
-      mint = Color(0xff9ad8cc);
+  /// Deep Tide: night water. Depth is a petrol ladder — each layer colder
+  /// and darker. The only warm tone is moonlit jade, and it marks
+  /// interaction alone.
+  static const night = Color(0xff04121f),
+      surface = Color(0xff0a1e30),
+      raised = Color(0xff12314a),
+      text = Color(0xffede9dc),
+      secondary = Color(0xff8fa6b5),
+      lavender = Color(0xff9fe8c8),
+      moonlight = Color(0xfff5e7c4),
+      blue = Color(0xff7ec8e0),
+      gold = Color(0xffe0a377),
+      mint = Color(0xff9fe8c8);
+
+  /// Hairline neutral stroke for panels: the moon-white at low alpha.
+  static Color hairline([bool light = false]) => light
+      ? const Color(0xff152a38).withValues(alpha: .08)
+      : const Color(0xffede9dc).withValues(alpha: .07);
 }
 
 /// Vertical rhythm on a 4/8 base grid. Sections of a screen separate by
@@ -50,11 +59,22 @@ TextStyle display(double size) => TextStyle(
   fontWeight: FontWeight.w400,
   letterSpacing: -.5,
 );
+
+/// Dream titles and signature moments: the diary's own hand. Inter never
+/// italicizes; Lora italic belongs to dreams, not to chrome.
+TextStyle diary(double size) => TextStyle(
+  fontFamily: 'Lora',
+  fontSize: size,
+  height: 1.18,
+  fontStyle: FontStyle.italic,
+  fontWeight: FontWeight.w400,
+  letterSpacing: -.3,
+);
 Color moodColor(Mood? mood) => switch (mood) {
   Mood.happy => Palette.gold,
   Mood.peaceful => Palette.mint,
   Mood.calm => Palette.blue,
-  Mood.romantic => const Color(0xffe6abc9),
+  Mood.romantic => const Color(0xfff2c4c9),
   Mood.scary || Mood.anxious => const Color(0xffed9aaa),
   _ => Palette.lavender,
 };
@@ -73,9 +93,9 @@ IconData moodIcon(Mood? mood) => switch (mood) {
 
 ThemeData dreamTheme({bool light = false}) {
   final scheme = ColorScheme.fromSeed(
-    seedColor: Palette.lavender,
+    seedColor: const Color(0xff3f8f77),
     brightness: light ? Brightness.light : Brightness.dark,
-    surface: light ? const Color(0xfff3f1fa) : Palette.surface,
+    surface: light ? const Color(0xffeff2ef) : Palette.surface,
   );
   return ThemeData(
     colorScheme: scheme,
@@ -87,18 +107,18 @@ ThemeData dreamTheme({bool light = false}) {
         .textTheme
         .apply(
           fontFamily: 'Inter',
-          bodyColor: light ? const Color(0xff24233f) : Palette.text,
-          displayColor: light ? const Color(0xff24233f) : Palette.text,
+          bodyColor: light ? const Color(0xff152a38) : Palette.text,
+          displayColor: light ? const Color(0xff152a38) : Palette.text,
         ),
     cupertinoOverrideTheme: CupertinoThemeData(
       brightness: light ? Brightness.light : Brightness.dark,
-      primaryColor: light ? const Color(0xff6652b8) : Palette.lavender,
+      primaryColor: light ? const Color(0xff2e7d64) : Palette.lavender,
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: light
-          ? Colors.white.withValues(alpha: .7)
-          : Palette.night.withValues(alpha: .5),
+          ? Colors.white.withValues(alpha: .8)
+          : Palette.raised.withValues(alpha: .45),
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       hintStyle: const TextStyle(fontSize: 14),
@@ -109,14 +129,14 @@ ThemeData dreamTheme({bool light = false}) {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Palette.lavender.withValues(alpha: .18)),
+        borderSide: BorderSide(color: Palette.hairline(light), width: .7),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Palette.lavender),
+        borderSide: const BorderSide(color: Palette.lavender, width: 1),
       ),
     ),
-    dividerColor: Palette.lavender.withValues(alpha: .14),
+    dividerColor: Palette.hairline(light),
   );
 }
 
@@ -127,11 +147,14 @@ class CosmicBackground extends ConsumerStatefulWidget {
   ConsumerState<CosmicBackground> createState() => _CosmicBackgroundState();
 }
 
+/// Deep Tide background: light falls from the surface of the water downward.
+/// A vertical moon-shaft drifts slowly (the "tide"), mist sprites rise like
+/// bubbles, stars hang far above. Content never moves.
 class _CosmicBackgroundState extends ConsumerState<CosmicBackground>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController motion = AnimationController(
     vsync: this,
-    duration: const Duration(seconds: 55),
+    duration: const Duration(seconds: 44),
   );
   bool foreground = true;
   @override
@@ -170,10 +193,10 @@ class _CosmicBackgroundState extends ConsumerState<CosmicBackground>
     return Stack(
       fit: StackFit.expand,
       children: [
-        ColoredBox(color: light ? const Color(0xfff3f1fa) : Palette.night),
+        ColoredBox(color: light ? const Color(0xffeff2ef) : Palette.night),
         if (!light)
           Opacity(
-            opacity: .6,
+            opacity: .5,
             child: Image.asset(
               'assets/backgrounds/cosmic_background.webp',
               fit: BoxFit.cover,
@@ -182,14 +205,11 @@ class _CosmicBackgroundState extends ConsumerState<CosmicBackground>
           ),
         IgnorePointer(
           child: RepaintBoundary(
-            child: CustomPaint(painter: _CosmosPainter(motion, light)),
+            child: CustomPaint(painter: _TidePainter(motion, light)),
           ),
         ),
         if (!light)
-          Positioned(
-            left: -24,
-            right: -24,
-            bottom: -30,
+          Positioned.fill(
             child: IgnorePointer(
               child: ExcludeSemantics(
                 child: AnimatedBuilder(
@@ -197,18 +217,16 @@ class _CosmicBackgroundState extends ConsumerState<CosmicBackground>
                   builder: (context, child) => Transform.translate(
                     offset: Offset(
                       0,
-                      reduced ? 0 : math.sin(motion.value * math.pi * 2) * 10,
+                      reduced
+                          ? 0
+                          : -14 + math.sin(motion.value * math.pi * 2) * 14,
                     ),
                     child: child,
                   ),
                   child: RepaintBoundary(
-                    child: Opacity(
-                      opacity: .23,
-                      child: Image.asset(
-                        'assets/backgrounds/nebula_foreground.webp',
-                        fit: BoxFit.fitWidth,
-                        cacheWidth: 1200,
-                      ),
+                    child: const Opacity(
+                      opacity: .3,
+                      child: _TideMist(),
                     ),
                   ),
                 ),
@@ -221,68 +239,88 @@ class _CosmicBackgroundState extends ConsumerState<CosmicBackground>
   }
 }
 
-class _CosmosPainter extends CustomPainter {
-  _CosmosPainter(this.animation, this.light) : super(repaint: animation);
+class _TideMist extends StatelessWidget {
+  const _TideMist();
+  @override
+  Widget build(BuildContext context) => Image.asset(
+    'assets/backgrounds/nebula_foreground_alpha.png',
+    fit: BoxFit.cover,
+    errorBuilder: (_, error, stack) => const SizedBox.shrink(),
+  );
+}
+
+class _TidePainter extends CustomPainter {
+  _TidePainter(this.animation, this.light) : super(repaint: animation);
   final Animation<double> animation;
   final bool light;
   @override
   void paint(Canvas canvas, Size size) {
-    final drift = math.sin(animation.value * math.pi * 2) * 18;
-    for (final (center, color, radius) in [
-      (
-        Offset(size.width * .95, size.height * .14 + drift),
-        const Color(0xff6050c4),
-        size.width * .9,
-      ),
-      (
-        Offset(-size.width * .12, size.height * .78 - drift),
-        const Color(0xff4430a0),
-        size.width * .85,
-      ),
-      (
-        Offset(size.width * .75, size.height),
-        const Color(0xff214e91),
-        size.width * .7,
-      ),
+    final t = animation.value;
+    // Moonlight shafts drift down slowly — the tide breathing.
+    final drift = math.sin(t * math.pi * 2) * size.height * .04;
+    for (final (frac, color, width) in [
+      (.18, const Color(0xff9fe8c8), .55),
+      (.62, const Color(0xff7ec8e0), .4),
+      (.88, const Color(0xff2e6f8e), .7),
     ]) {
-      canvas.drawCircle(
-        center,
-        radius,
+      final x = size.width * frac + drift * .3;
+      canvas.drawRect(
+        Rect.fromLTWH(x - size.width * width / 2, -40, size.width * width,
+            size.height + 80),
         Paint()
-          ..shader = RadialGradient(
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
             colors: [
-              color.withValues(alpha: light ? .08 : .24),
+              color.withValues(alpha: light ? .05 : .10),
               color.withValues(alpha: 0),
             ],
-          ).createShader(Rect.fromCircle(center: center, radius: radius)),
+            stops: const [.0, .85],
+          ).createShader(
+            Rect.fromLTWH(x - size.width * width / 2, 0,
+                size.width * width, size.height),
+          ),
       );
     }
     if (light) return;
-    final random = math.Random(81);
-    for (var i = 0; i < 95; i++) {
-      final p = Offset(
-        random.nextDouble() * size.width,
-        random.nextDouble() * size.height,
-      );
-      final r = .35 + random.nextDouble() * .85;
-      final alpha = .16 + random.nextDouble() * .45;
+    // Bubbles rising slowly through the water column.
+    final random = math.Random(27);
+    for (var i = 0; i < 40; i++) {
+      final bx = random.nextDouble() * size.width;
+      final phase = random.nextDouble();
+      final by = (size.height * 1.1 -
+              ((t + phase) % 1) * size.height * 1.2 -
+              drift * .2)
+          .clamp(0.0, size.height);
+      final r = 1 + random.nextDouble() * 2.2;
       canvas.drawCircle(
-        p,
+        Offset(bx, by),
         r,
-        Paint()..color = Palette.secondary.withValues(alpha: alpha),
+        Paint()
+          ..color = const Color(0xffede9dc).withValues(
+            alpha: .05 + random.nextDouble() * .12,
+          ),
       );
-      if (i % 23 == 0) {
-        final paint = Paint()
-          ..color = Palette.lavender.withValues(alpha: .4)
-          ..strokeWidth = .6;
-        canvas.drawLine(p - const Offset(0, 4), p + const Offset(0, 4), paint);
-        canvas.drawLine(p - const Offset(4, 0), p + const Offset(4, 0), paint);
-      }
+    }
+    // Faint far stars only in the top band, above the "surface".
+    final stars = math.Random(81);
+    for (var i = 0; i < 60; i++) {
+      canvas.drawCircle(
+        Offset(
+          stars.nextDouble() * size.width,
+          stars.nextDouble() * size.height * .25,
+        ),
+        .3 + stars.nextDouble() * .7,
+        Paint()
+          ..color = Palette.secondary.withValues(
+            alpha: .12 + stars.nextDouble() * .3,
+          ),
+      );
     }
   }
 
   @override
-  bool shouldRepaint(covariant _CosmosPainter old) => old.light != light;
+  bool shouldRepaint(covariant _TidePainter old) => old.light != light;
 }
 
 class DreamSurface extends ConsumerWidget {
@@ -305,36 +343,27 @@ class DreamSurface extends ConsumerWidget {
     final opaque =
         ref.watch(settingsProvider)['opaque'] == 'true' ||
         MediaQuery.highContrastOf(context);
+    // Night Atlas: a flat tonal plate — the surface tone itself carries the
+    // elevation. Neutral hairline, one quiet shadow, no gradient fill.
     Widget content = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: light
-              ? [
-                  Colors.white.withValues(alpha: .92),
-                  const Color(0xffe9e6f5).withValues(alpha: .94),
-                ]
-              : [
-                  Palette.raised.withValues(alpha: opaque ? 1 : .82),
-                  Palette.surface.withValues(alpha: opaque ? 1 : .88),
-                ],
-        ),
-        border: Border.all(
-          color: Palette.lavender.withValues(alpha: light ? .3 : .28),
-          width: .7,
-        ),
+        color: light
+            ? Colors.white.withValues(alpha: opaque ? 1 : .96)
+            : Palette.surface.withValues(alpha: opaque ? 1 : .93),
+        border: Border.all(color: Palette.hairline(light), width: .7),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: light ? .025 : .15),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: light ? .03 : .22),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Padding(padding: padding, child: child),
     );
+    // Blur stays on the floating chrome layer only (tab bar, pop-overs).
+    // Content panels are tonal, never frosted.
     if (glass && !opaque) {
       content = ClipRRect(
         borderRadius: BorderRadius.circular(radius),
@@ -386,22 +415,15 @@ class DreamButton extends ConsumerWidget {
       );
     }
     return DecoratedBox(
+      // Deep Tide button: a moonlit plate — jade ink in dark petrol water.
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: const LinearGradient(
-          colors: [Color(0xff6652b8), Color(0xff4356aa)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xff155f4c), Color(0xff0d3a30)],
         ),
-        border: Border.all(
-          color: Palette.lavender.withValues(alpha: .65),
-          width: .8,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Palette.lavender.withValues(alpha: .17),
-            blurRadius: 23,
-            spreadRadius: 1,
-          ),
-        ],
+        border: Border.all(color: Palette.lavender.withValues(alpha: .45), width: .8),
       ),
       child: CupertinoButton(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -421,7 +443,7 @@ class DreamButton extends ConsumerWidget {
             if (busy)
               const CupertinoActivityIndicator(color: Colors.white)
             else
-              Icon(icon, color: Palette.text, size: 21),
+              Icon(icon, color: Palette.mint, size: 21),
             const SizedBox(width: 12),
             Flexible(
               child: Text(
@@ -466,7 +488,7 @@ class DreamPage extends StatelessWidget {
               toolbarHeight: 52,
               backgroundColor: Theme.of(context).brightness == Brightness.dark
                   ? Palette.night
-                  : const Color(0xfff3f1fa),
+                  : const Color(0xffeff2ef),
               surfaceTintColor: Colors.transparent,
               leading: IconButton(
                 onPressed: () => context.pop(),
@@ -571,18 +593,13 @@ class DreamChip extends StatelessWidget {
       minimumSize: Size(0, onTap == null ? 30 : 44),
       onPressed: onTap,
       child: Container(
+        // Tidal pill: soft fill, no border. Jade only when interactive.
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: (color ?? Palette.lavender).withValues(
-            alpha: selected ? .18 : .04,
+            alpha: selected ? .2 : .07,
           ),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: (color ?? Palette.lavender).withValues(
-              alpha: selected ? .5 : .14,
-            ),
-            width: .7,
-          ),
+          borderRadius: BorderRadius.circular(11),
         ),
         child: Text(
           label,
@@ -591,7 +608,9 @@ class DreamChip extends StatelessWidget {
             fontSize: 13,
             height: 1.15,
             fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-            color: Theme.of(context).colorScheme.onSurface,
+            color: onTap == null
+                ? (color ?? Theme.of(context).colorScheme.onSurface)
+                : (color ?? Palette.lavender),
           ),
         ),
       ),
@@ -626,6 +645,7 @@ class MoodOrb extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // A bioluminescent mote: light from within the water.
               AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 width: size,
@@ -633,24 +653,32 @@ class MoodOrb extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
-                    center: const Alignment(-.4, -.5),
-                    colors: [color.withValues(alpha: .42), Palette.surface],
+                    center: const Alignment(-.35, -.4),
+                    colors: [
+                      color.withValues(alpha: .5),
+                      color.withValues(alpha: .12),
+                      Palette.night,
+                    ],
+                    stops: const [0, .55, 1],
                   ),
                   border: Border.all(
-                    color: color.withValues(alpha: selected ? 1 : .65),
-                    width: selected ? 1.7 : .8,
+                    color: color.withValues(alpha: selected ? 1 : .5),
+                    width: selected ? 1.6 : .7,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: color.withValues(alpha: selected ? .32 : .14),
-                      blurRadius: 18,
+                      color: color.withValues(alpha: selected ? .3 : .1),
+                      blurRadius: 16,
                     ),
                   ],
                 ),
-                child: Icon(moodIcon(mood), color: color, size: size * .45),
+                child: Icon(moodIcon(mood), color: color, size: size * .42),
               ),
-              const SizedBox(height: 9),
-              Text(mood.label(en), style: const TextStyle(fontSize: 12)),
+              const SizedBox(height: 8),
+              Text(
+                mood.label(en),
+                style: TextStyle(fontSize: 12, color: Palette.secondary),
+              ),
             ],
           ),
         ),
@@ -659,15 +687,19 @@ class MoodOrb extends StatelessWidget {
   }
 }
 
+/// The museum frame: the dream art is a painting, not a poster. A thin
+/// neutral stroke, inner margin, and the caption lives *under* the painting
+/// on the page surface — never as a scrim over the art.
 class DreamArtwork extends StatelessWidget {
-  const DreamArtwork(this.id, {super.key, this.child, this.radius = 26});
+  const DreamArtwork(this.id,
+      {super.key, this.child, this.radius = 18, this.frame = true});
   final String id;
   final Widget? child;
   final double radius;
+  final bool frame;
   @override
-  Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(radius),
-    child: Stack(
+  Widget build(BuildContext context) {
+    Widget art = Stack(
       fit: StackFit.expand,
       children: [
         CustomPaint(
@@ -679,24 +711,32 @@ class DreamArtwork extends StatelessWidget {
           alignment: const Alignment(.35, 0),
           errorBuilder: (_, error, stack) => const SizedBox.shrink(),
         ),
-        if (child != null)
-          DecoratedBox(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  Color(0xef080d25),
-                  Color(0x90080d25),
-                  Color(0x10080d25),
-                ],
-              ),
-            ),
-            child: child,
-          ),
+        ?child,
       ],
-    ),
-  );
+    );
+    if (!frame) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: art,
+      );
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: Palette.hairline(), width: 1),
+        boxShadow: const [
+          BoxShadow(color: Color(0x3304121f), blurRadius: 24, offset: Offset(0, 8)),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius - 2),
+          child: art,
+        ),
+      ),
+    );
+  }
 }
 
 class _PlaceholderArt extends CustomPainter {
@@ -707,7 +747,7 @@ class _PlaceholderArt extends CustomPainter {
     final colors = [
       Palette.lavender,
       Palette.blue,
-      const Color(0xffb779a1),
+      const Color(0xff7ec8e0),
       Palette.blue,
       Palette.lavender,
       Palette.gold,
@@ -724,7 +764,7 @@ class _PlaceholderArt extends CustomPainter {
           end: Alignment.topRight,
           colors: [
             Palette.night,
-            const Color(0xff182451),
+            const Color(0xff0d2b42),
             c.withValues(alpha: .6),
           ],
         ).createShader(rect),
@@ -745,7 +785,7 @@ class _PlaceholderArt extends CustomPainter {
       Paint()
         ..shader = RadialGradient(
           center: const Alignment(-.5, -.5),
-          colors: [const Color(0xffffe9ce), c, const Color(0xff464d91)],
+          colors: [const Color(0xfff5e7c4), c, const Color(0xff1a4258)],
         ).createShader(Rect.fromCircle(center: center, radius: radius)),
     );
     final random = math.Random(index + 37);
@@ -790,6 +830,7 @@ class _PlaceholderArt extends CustomPainter {
   bool shouldRepaint(covariant _PlaceholderArt old) => old.index != index;
 }
 
+/// Museum-plate card: framed painting + caption row beneath it on the page.
 class DreamCard extends ConsumerWidget {
   const DreamCard(
     this.dream, {
@@ -801,7 +842,7 @@ class DreamCard extends ConsumerWidget {
   final bool en, large;
   @override
   Widget build(BuildContext context, WidgetRef ref) => Padding(
-    padding: const EdgeInsets.only(bottom: 16),
+    padding: const EdgeInsets.only(bottom: Rhythm.section),
     child: Semantics(
       button: true,
       label: dreamTitle(dream, en),
@@ -809,65 +850,60 @@ class DreamCard extends ConsumerWidget {
         behavior: HitTestBehavior.opaque,
         onLongPress: () => _actions(context, ref),
         onTap: () => context.push('/dream/${dream.id}'),
-        child: SizedBox(
-          height:
-              (large ? 224 : 164) *
-              math.max(1, MediaQuery.textScalerOf(context).scale(14) / 14),
-          child: HeroMode(
-            enabled: false,
-            child: Material(
-              color: Colors.transparent,
-              child: DreamArtwork(
-                dream.artwork,
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height:
+                  (large ? 210 : 150) *
+                  math.max(1, MediaQuery.textScalerOf(context).scale(14) / 14),
+              child: HeroMode(
+                enabled: false,
+                child: Material(
+                  color: Colors.transparent,
+                  child: DreamArtwork(dream.artwork),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(2, 10, 2, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    formatDate(dream.date, en),
+                    style: const TextStyle(
+                      color: Palette.secondary,
+                      fontSize: 11,
+                      letterSpacing: .3,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    dreamTitle(dream, en),
+                    style: diary(large ? 24 : 19).copyWith(color: Palette.text),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: Rhythm.s),
+                  Row(
                     children: [
-                      Text(
-                        formatDate(dream.date, en),
-                        style: const TextStyle(
-                          color: Palette.secondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 9),
-                      Text(
-                        dreamTitle(dream, en),
-                        style: display(
-                          large ? 26 : 22,
-                        ).copyWith(color: Palette.text),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const Spacer(),
-                      if (large)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 14, right: 60),
-                          child: Text(
-                            dream.description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Palette.secondary,
-                              height: 1.5,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      Row(
-                        children: [
-                          if (dream.mood != null)
-                            Text(
-                              dream.mood!.label(en),
-                              style: TextStyle(
-                                color: moodColor(dream.mood),
-                                fontSize: 13,
+                      Expanded(
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            if (dream.mood != null)
+                              Text(
+                                dream.mood!.label(en),
+                                style: TextStyle(
+                                  color: moodColor(dream.mood),
+                                  fontSize: 12,
+                                ),
                               ),
-                            ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
+                            if (dream.mood != null)
+                              const SizedBox(width: 6),
+                            Text(
                               dream.type.label(en),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -876,27 +912,27 @@ class DreamCard extends ConsumerWidget {
                                 fontSize: 12,
                               ),
                             ),
-                          ),
-                          if (dream.favorite)
-                            const Icon(
-                              CupertinoIcons.heart_fill,
-                              size: 16,
-                              color: Palette.lavender,
-                            ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            CupertinoIcons.arrow_up_right,
-                            size: 19,
-                            color: Palette.text,
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+                      if (dream.favorite)
+                        const Icon(
+                          CupertinoIcons.heart_fill,
+                          size: 15,
+                          color: Palette.gold,
+                        ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        CupertinoIcons.chevron_right,
+                        size: 15,
+                        color: Palette.secondary,
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
             ),
-          ),
+          ],
         ),
       ),
     ),

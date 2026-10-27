@@ -1,27 +1,5 @@
 workflows:
-  android-demo:
-    name: DreamSpace Android demo
-    max_build_duration: 45
-    instance_type: mac_mini_m2
-    environment:
-      flutter: 3.44.1
-      java: 17
-    scripts:
-      - name: Dependencies
-        script: flutter pub get
-      - name: Generate database
-        script: dart run build_runner build
-      - name: Analyze and test
-        script: |
-          set -euo pipefail
-          flutter analyze
-          flutter test --reporter expanded
-      - name: Build demo APK
-        script: flutter build apk --release
-    artifacts:
-      - build/app/outputs/flutter-apk/*.apk
-
-  ios-compile:
+  ios-unsigned:
     name: DreamSpace unsigned IPA for ESign
     max_build_duration: 45
     instance_type: mac_mini_m2

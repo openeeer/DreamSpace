@@ -97,7 +97,7 @@ class _DictationScreenState extends ConsumerState<DictationScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: CupertinoPageScaffold(
-        backgroundColor: const Color(0xff05081a),
+        backgroundColor: const Color(0xff03101c),
         child: SafeArea(
           child: Column(
             children: [
@@ -107,7 +107,7 @@ class _DictationScreenState extends ConsumerState<DictationScreen> {
                   onPressed: () => context.pop(),
                   child: Icon(
                     CupertinoIcons.xmark,
-                    color: const Color(0xff8b86ad),
+                    color: const Color(0xff8fa6b5),
                     size: 22,
                     semanticLabel: tr(en, 'Закрыть', 'Close'),
                   ),
@@ -156,7 +156,7 @@ class _DictationScreenState extends ConsumerState<DictationScreen> {
                       style: const TextStyle(
                         fontSize: 14,
                         height: 1.5,
-                        color: Color(0xffa8a3c9),
+                        color: Color(0xff8fa6b5),
                       ),
                     ),
                     if (!sending) ...[
@@ -170,7 +170,7 @@ class _DictationScreenState extends ConsumerState<DictationScreen> {
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 11,
-                          color: Color(0xff6d688f),
+                          color: Color(0xff6f7f8a),
                         ),
                       ),
                     ],
@@ -209,7 +209,7 @@ class _RecordOrb extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         if (recording)
-          const _PulsingHalo(color: Color(0xffc0acff))
+          const _PulsingHalo(color: Color(0xff9fe8c8))
         else
           Container(
             width: 240,
@@ -217,7 +217,7 @@ class _RecordOrb extends StatelessWidget {
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
-                colors: [Color(0x14120e2e), Color(0x0508081a)],
+                colors: [Color(0x140a1e30), Color(0x0504121f)],
               ),
             ),
           ),
@@ -226,15 +226,15 @@ class _RecordOrb extends StatelessWidget {
           height: 108,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: recording ? const Color(0xffc0acff) : const Color(0xff171c3c),
+            color: recording ? const Color(0xff9fe8c8) : const Color(0xff12314a),
             border: Border.all(
-              color: const Color(0xffc0acff).withValues(alpha: .5),
+              color: const Color(0xff9fe8c8).withValues(alpha: .5),
               width: 1,
             ),
             boxShadow: recording
                 ? [
                     BoxShadow(
-                      color: const Color(0xffc0acff).withValues(alpha: .35),
+                      color: const Color(0xff9fe8c8).withValues(alpha: .35),
                       blurRadius: 40,
                     ),
                   ]
@@ -242,21 +242,21 @@ class _RecordOrb extends StatelessWidget {
           ),
           child: Center(
             child: sending
-                ? const CupertinoActivityIndicator(color: Color(0xffc0acff))
+                ? const CupertinoActivityIndicator(color: Color(0xff9fe8c8))
                 : recording
                 ? Text(
                     _timeLabel,
                     style: const TextStyle(
                       fontSize: 22,
                       letterSpacing: 1,
-                      color: Color(0xff05081a),
+                      color: Color(0xff03101c),
                       fontWeight: FontWeight.w600,
                     ),
                   )
                 : Icon(
                     CupertinoIcons.mic_fill,
                     size: 40,
-                    color: const Color(0xffc0acff),
+                    color: const Color(0xff9fe8c8),
                     semanticLabel: tr(en, 'Записать', 'Record'),
                   ),
           ),

@@ -94,7 +94,11 @@ class _DreamTabBarState extends State<DreamTabBar> {
       CupertinoIcons.map,
       CupertinoIcons.person,
     ];
+    final light = Theme.of(context).brightness == Brightness.light;
     final accent = Theme.of(context).colorScheme.primary;
+    final unselected = light
+        ? const Color(0xff152a38).withValues(alpha: .45)
+        : Palette.secondary;
     return DreamSurface(
       glass: true,
       radius: 30,
@@ -112,38 +116,29 @@ class _DreamTabBarState extends State<DreamTabBar> {
                     duration: const Duration(milliseconds: 240),
                     curve: Curves.easeOutCubic,
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
-                      border: widget.index == i
-                          ? Border.all(
-                              color: accent.withValues(alpha: .35),
-                              width: .7,
-                            )
-                          : null,
+                      // Selected tab: a bioluminescent well of jade light.
                       color: widget.index == i
-                          ? accent.withValues(alpha: .16)
+                          ? (light
+                                ? const Color(0xff2e7d64).withValues(alpha: .12)
+                                : const Color(0xff9fe8c8).withValues(alpha: .12))
                           : null,
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Selected items take the tint, unselected stay muted —
-                        // the same contrast a native UITabBar draws.
+                        // Filled symbol for the selected tab (HIG), tinted;
+                        // unselected stay quiet and neutral.
                         AnimatedScale(
                           scale: widget.index == i ? 1.08 : 1,
                           duration: const Duration(milliseconds: 240),
                           curve: Curves.easeOutBack,
                           child: Icon(
                             icons[i],
-                            size: 25,
-                            color: widget.index == i
-                                ? accent
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface.withValues(
-                                    alpha: .55,
-                                  ),
+                            size: 24,
+                            color: widget.index == i ? accent : unselected,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -156,13 +151,7 @@ class _DreamTabBarState extends State<DreamTabBar> {
                             fontWeight: widget.index == i
                                 ? FontWeight.w600
                                 : FontWeight.w400,
-                            color: widget.index == i
-                                ? accent
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface.withValues(
-                                    alpha: .55,
-                                  ),
+                            color: widget.index == i ? accent : unselected,
                           ),
                         ),
                       ],

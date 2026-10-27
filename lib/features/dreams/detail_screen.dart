@@ -73,7 +73,7 @@ class DetailScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: Rhythm.l),
-          Text(dreamTitle(dream, en), style: display(28)),
+          Text(dreamTitle(dream, en), style: diary(28)),
           const SizedBox(height: Rhythm.l),
           Wrap(
             spacing: Rhythm.s,

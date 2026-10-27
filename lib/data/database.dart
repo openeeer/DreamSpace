@@ -61,7 +61,16 @@ class MatchRows extends Table {
   tables: [DreamRows, ElementRows, DreamLinks, Preferences, CharacterRows, MatchRows],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(driftDatabase(name: 'dreamspace'));
+  AppDatabase()
+    : super(
+        driftDatabase(
+          name: 'dreamspace',
+          web: DriftWebOptions(
+            sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+            driftWorker: Uri.parse('drift_worker.js'),
+          ),
+        ),
+      );
   AppDatabase.forTesting(super.executor);
   @override
   int get schemaVersion => 2;

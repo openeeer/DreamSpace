@@ -319,7 +319,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
             ),
           Text(
             tr(en, 'Что тебе приснилось?', 'What did you dream about?'),
-            style: display(25),
+            style: diary(25),
           ),
           const SizedBox(height: Rhythm.m),
           Text(
